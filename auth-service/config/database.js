@@ -1,10 +1,10 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();  // Load variabel lingkungan dari .env file
+const config = require('./config.json')[process.env.NODE_ENV || 'development'];
 
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  dialect: 'mysql',
+const sequelize = new Sequelize(config.database, config.username, config.password, {
+  host: config.host,
+  port: config.port,
+  dialect: config.dialect,
   pool: {
     max: 10,
     min: 0,

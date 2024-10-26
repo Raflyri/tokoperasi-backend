@@ -8,14 +8,17 @@ const path = require('path');
 
 exports.register = async (req, res) => {
     try {
-        const { username, email, password, role = 'buyer' } = req.body;
+        const { username, email, password, role = 'buyer', phoneNumber, storeName, profilePicture } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await User.create({
             Username: username,
             Email: email,
             PasswordHash: hashedPassword,
             Role: role,
-            IsVerified: false
+            IsVerified: false,
+            phoneNumber,
+            storeName: role === 'seller' ? storeName : null,
+            profilePicture
         });
 
         // Log audit record for user registration
@@ -28,20 +31,27 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
+    const { emailOrPhone, password } = req.body;
     try {
-        const user = await User.findOne({ where: { Email: email } });
+        const user = await User.findOne({
+            where: {
+                [Sequelize.Op.or]: [
+                    { Email: emailOrPhone },
+                    { phoneNumber: emailOrPhone }
+                ]
+            }
+        });
+
         if (!user) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({ message: 'Invalid email/phone or password' });
         }
 
         const isMatch = await bcrypt.compare(password, user.PasswordHash);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({ message: 'Invalid email/phone or password' });
         }
 
         const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        //const expiresAt = Math.floor(Date.now() / 1000) + 3600; UNIX Set token expiration 1 hour from now
         const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
 
         await Session.create({
@@ -86,7 +96,17 @@ exports.updateUser = async (req, res) => {
         console.log('After Update:', user.toJSON());
 
         // Log audit record for user update
-        await auditController.logUpdateAction(userId, req.user.username, req.user.secure_id, 'User updated');
+        await auditController.logUpdateAction(
+            userId,
+            req.user.username,
+            req.user.secure_id,
+            {
+                modified_by: req.user.username,
+                modified_by_id: req.user.secure_id,
+                modified_date: Math.floor(Date.now() / 1000),
+                changes: updatedFields
+            }
+        );
 
         // Log request to file
         const logData = `Time: ${new Date().toISOString()}\nRequest: ${JSON.stringify(req.body)}\n\n`;

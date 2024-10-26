@@ -48,6 +48,19 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING(50),
         allowNull: true,
     },
+    phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+    },
+    storeName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    profilePicture: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
     deletedAt: {
         type: DataTypes.DATE,
     },    

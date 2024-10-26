@@ -27,8 +27,8 @@ const AuditLog = sequelize.define('AuditLog', {
         type: DataTypes.STRING,
     },
     created_date: {
-        type: DataTypes.BIGINT,
-        defaultValue: () => Math.floor(Date.now() / 1000),
+        type: DataTypes.DATE,  // Ubah tipe data menjadi DATE
+        defaultValue: DataTypes.NOW,
     },
     modified_by: {
         type: DataTypes.STRING,
@@ -37,10 +37,10 @@ const AuditLog = sequelize.define('AuditLog', {
         type: DataTypes.STRING,
     },
     modified_date: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.DATE,  // Ubah tipe data menjadi DATE
     },
     deleted_at: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.DATE,  // Ubah tipe data menjadi DATE
     },
     deleted_by: {
         type: DataTypes.STRING,
