@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { getPayments, createPayment } = require('../controllers/paymentController');
+const paymentController = require('../controllers/paymentController');
+const authenticate = require('../middleware/authenticate');  // Import middleware autentikasi
 
-router.get('/', getPayments);
-router.post('/', createPayment);
+router.get('/', authenticate, paymentController.getPayments);  // Gunakan middleware autentikasi
+router.post('/', authenticate, paymentController.createPayment);  // Gunakan middleware autentikasi
 
 module.exports = router;

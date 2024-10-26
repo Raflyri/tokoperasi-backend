@@ -1,16 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const authRoutes = require('./routes/authRoutes');
-const sequelize = require('./config/database');  // Import sequelize instance
+const authRoutes = require('./routes/authRoutes');  
+const sequelize = require('./config/database'); 
+require('dotenv').config();
 
 const app = express();
-
+app.use(express.json());
 app.use(bodyParser.json());
+app.use('/api/auth', authRoutes);
 
-// Routes untuk Auth Service
-app.use('/auth', authRoutes);
-
-// Sinkronisasi database dan jalankan server
 const PORT = process.env.PORT || 4000;
 sequelize.sync().then(() => {
     app.listen(PORT, () => {

@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const paymentRoutes = require('./routes/paymentRoutes');
-const sequelize = require('./config/database');  // Import sequelize instance
+const sequelize = require('./config/database');
 const app = express();
 
 app.use(bodyParser.json());
@@ -12,7 +12,6 @@ app.listen(PORT, () => {
     console.log(`Payment Service berjalan di port ${PORT}`);
 });
 
-// Sync database
 sequelize.sync()
     .then(() => {
         console.log("Database synced");

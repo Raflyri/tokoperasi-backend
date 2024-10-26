@@ -1,57 +1,68 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 
 const User = sequelize.define('User', {
-    id: {
+    UserID: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
-        primaryKey: true
+        primaryKey: true,
     },
-    username: {
+    Username: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
     },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            len: [6, 100] // minimal 6 karakter
-        }
-    },
-    email: {
+    Email: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
         validate: {
-            isEmail: true
-        }
-    }
+            isEmail: true,
+        },
+    },
+    PasswordHash: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    Role: {
+        type: DataTypes.ENUM('buyer', 'seller', 'admin'),
+        allowNull: false,
+    },
+    Gender: {
+        type: DataTypes.ENUM('male', 'female', 'other'),
+    },
+    Birthdate: {
+        type: DataTypes.DATEONLY,
+    },
+    IsMember: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    IsVerified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    secure_id: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+    },
+    deletedAt: {
+        type: DataTypes.DATE,
+    },    
 }, {
-    timestamps: true
+    timestamps: true,
+    paranoid: true,
 });
 
-// Hook untuk hashing password sebelum create dan update
 User.beforeCreate(async (user) => {
-    user.password = await bcrypt.hash(user.password, 10); // Hashing password sebelum simpan
-});
-
-User.beforeUpdate(async (user) => {
-    if (user.changed('password')) {
-        user.password = await bcrypt.hash(user.password, 10); // Hashing jika password berubah
+    if (!user.secure_id) {
+        user.secure_id = uuidv4(); // Generate UUID sebagai secure_id
+    }
+    if (user.password) {
+        user.PasswordHash = await bcrypt.hash(user.PasswordHash, 10); // Hashing password sebelum simpan
     }
 });
-
-// Sync hanya jika dalam environment development
-if (process.env.NODE_ENV === 'development') {
-    sequelize.sync()
-        .then(() => {
-            console.log("Users table has been synced");
-        })
-        .catch((error) => {
-            console.error("Unable to sync the Users table:", error);
-        });
-}
 
 module.exports = User;
