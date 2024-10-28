@@ -1,13 +1,15 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const cartRoutes = require('./routes/cartRoutes');
 const app = express();
-const sequelize = require('./config/database');  // Import sequelize instance
+const cartRoutes = require('./routes/cartRoutes');
 
-app.use(bodyParser.json());
-app.use('/cart', cartRoutes);
+// Middleware
+app.use(express.json());
 
+// Routes
+app.use('/api/cart', cartRoutes);
+
+// Start Server
 const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => {
-    console.log(`Cart Service berjalan di port ${PORT}`);
+    console.log(`Cart Service running on port ${PORT}`);
 });

@@ -1,17 +1,21 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-    const token = req.header('Authorization').replace('Bearer ', '');
-
-    if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
+    const authHeader = req.header('Authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Authorization token is missing or invalid' });
     }
+
+    const token = authHeader.replace('Bearer ', '');
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // Tambahkan objek user ke dalam request
+        req.user = decoded;      // Original decoded token for flexibility
+        req.userId = decoded.id; // Explicit userId for direct access in controllers
         next();
     } catch (error) {
-        res.status(401).json({ message: 'Invalid token' });
+        console.log('Error verifying token:', error.message);
+        res.status(401).json({ message: 'Invalid or expired token' });
     }
 };

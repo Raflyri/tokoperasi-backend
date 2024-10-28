@@ -1,56 +1,111 @@
-const Cart = require('../models/cartModel');
+const { Cart, CartItem } = require('../models/cartModel');
 
-exports.getCart = async (req, res) => {
+// Create Cart
+exports.createCart = async (req, res) => {
     try {
-        const cartItems = await Cart.findAll({ where: { userId: req.user.id } });
-        res.json(cartItems);
+        const UserID = req.user.id;
+        console.log(`User with ID ${UserID} is creating a cart`);
+        console.log(req.body);
+
+        const newCart = await Cart.create({ UserID });
+        console.log(`Cart created with ID ${newCart.CartID}`);
+
+        res.status(201).json({ message: 'Cart created successfully', cart: newCart });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching cart items', error: error.message });
+        console.error('Error creating cart:', error.message);
+        res.status(500).json({ message: 'Error creating cart', error: error.message });
     }
 };
 
-exports.addToCart = async (req, res) => {
+// Add Item to Cart
+exports.addItemToCart = async (req, res) => {
     try {
-        const { productId, quantity } = req.body;
-        const newCartItem = await Cart.create({ userId: req.user.id, productId, quantity });
-        console.log(newCartItem);
-        res.status(201).json(newCartItem);
+        const UserID = req.user.id;
+        const { ProductID, Quantity, Note } = req.body;  // Pastikan destructuring request body dengan benar
+        console.log(`User with ID ${UserID} is adding item with ID ${ProductID} to cart`);
+        console.log('Request Body:',req.body);
+
+        if (!ProductID || !Quantity) {
+            return res.status(400).json({ message: 'ProductID and Quantity are required' });
+        }
+
+        let cart = await Cart.findOne({ where: { UserID } });
+        if (!cart) {
+            cart = await Cart.create({ UserID });
+        }
+
+        const newCartItem = await CartItem.create({
+            CartID: cart.CartID,
+            ProductID,
+            Quantity,
+            Note
+        });
+
+        res.status(201).json({ message: 'Item added to cart successfully', cartItem: newCartItem });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Error adding to cart', error: error.message });
+        console.error('Error adding item to cart:', error.message);
+        res.status(500).json({ message: 'Error adding item to cart', error: error.message });
     }
 };
 
+// Get Cart by ID
+exports.getCartById = async (req, res) => {
+    try {
+        const UserID = req.user.UserID; // Dapatkan UserID dari middleware
+        const cart = await Cart.findOne({
+            where: { UserID },
+            include: CartItem
+        });
+        if (!cart) return res.status(404).json({ message: 'Cart not found' });
+        res.status(200).json({ cart });
+    } catch (error) {
+        res.status(500).json({ message: 'Error retrieving cart', error: error.message });
+    }
+};
+
+// Update Cart Item
 exports.updateCartItem = async (req, res) => {
     try {
         const { id } = req.params;
-        const { quantity } = req.body;
-        const cartItem = await Cart.findOne({ where: { id, userId: req.user.id } });
+        const { Quantity, Note } = req.body;
+        const item = await CartItem.findByPk(id);
 
-        if (!cartItem) {
-            return res.status(404).json({ message: 'Cart item not found' });
-        }
+        if (!item) return res.status(404).json({ message: 'Item not found' });
 
-        cartItem.quantity = quantity;
-        await cartItem.save();
-        res.json(cartItem);
+        item.Quantity = Quantity || item.Quantity;
+        item.Note = Note || item.Note;
+        await item.save();
+
+        res.status(200).json({ message: 'Item updated successfully', item });
     } catch (error) {
-        res.status(500).json({ message: 'Error updating cart item', error: error.message });
+        res.status(500).json({ message: 'Error updating item', error: error.message });
     }
 };
 
+// Delete Cart Item
 exports.deleteCartItem = async (req, res) => {
     try {
         const { id } = req.params;
-        const cartItem = await Cart.findOne({ where: { id, userId: req.user.id } });
+        const item = await CartItem.findByPk(id);
+        if (!item) return res.status(404).json({ message: 'Item not found' });
 
-        if (!cartItem) {
-            return res.status(404).json({ message: 'Cart item not found' });
-        }
-
-        await cartItem.destroy();
-        res.json({ message: 'Cart item deleted' });
+        await item.destroy();
+        res.status(200).json({ message: 'Item deleted successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting cart item', error: error.message });
+        res.status(500).json({ message: 'Error deleting item', error: error.message });
+    }
+};
+
+// Clear Cart
+exports.clearCart = async (req, res) => {
+    try {
+        const UserID = req.user.UserID; // Dapatkan UserID dari middleware
+        const cart = await Cart.findOne({ where: { UserID } });
+        if (!cart) return res.status(404).json({ message: 'Cart not found' });
+
+        await CartItem.destroy({ where: { CartID: cart.CartID } });
+        res.status(200).json({ message: 'Cart cleared successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error clearing cart', error: error.message });
     }
 };
