@@ -13,8 +13,10 @@ exports.addToCart = async (req, res) => {
     try {
         const { productId, quantity } = req.body;
         const newCartItem = await Cart.create({ userId: req.user.id, productId, quantity });
+        console.log(newCartItem);
         res.status(201).json(newCartItem);
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: 'Error adding to cart', error: error.message });
     }
 };

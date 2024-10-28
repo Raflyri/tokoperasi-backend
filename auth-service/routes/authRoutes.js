@@ -23,4 +23,6 @@ router.put('/verify-user/:userId', authenticate, userController.verifyUser);
 
 router.get('/users', userController.getAllUsers);
 
+router.post('/logout', authenticate, userController.logout);
+
 module.exports = router;

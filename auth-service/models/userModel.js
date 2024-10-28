@@ -71,10 +71,10 @@ const User = sequelize.define('User', {
 
 User.beforeCreate(async (user) => {
     if (!user.secure_id) {
-        user.secure_id = uuidv4(); // Generate UUID sebagai secure_id
+        user.secure_id = uuidv4();
     }
     if (user.password) {
-        user.PasswordHash = await bcrypt.hash(user.PasswordHash, 10); // Hashing password sebelum simpan
+        user.PasswordHash = await bcrypt.hash(user.PasswordHash, 10);
     }
 });
 

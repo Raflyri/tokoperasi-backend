@@ -6,16 +6,22 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const { Op } = require('sequelize');
 
 exports.register = async (req, res) => {
     try {
-        const { username, email, password, role = 'buyer', phoneNumber, storeName, profilePicture } = req.body;
+        const { username, email, password, role, phoneNumber, storeName, profilePicture } = req.body;
+        console.log('Request Body:', req.body);
         const hashedPassword = await bcrypt.hash(password, 10);
+        if (role === 'seller' && !storeName) {
+            return res.status(400).json({ message: 'Store name is required for sellers' });
+        }
+
         const newUser = await User.create({
             Username: username,
             Email: email,
             PasswordHash: hashedPassword,
-            Role: role,
+            Role: role || 'buyer',
             IsVerified: false,
             phoneNumber,
             storeName: role === 'seller' ? storeName : null,
@@ -27,17 +33,28 @@ exports.register = async (req, res) => {
 
         res.status(201).json({ message: 'User registered successfully', user: newUser });
     } catch (error) {
+        console.error('Error during login:', error);
         res.status(500).json({ message: 'Error registering user', error: error.message });
     }
 };
 
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        console.log('Request Body:', req.body); // Log request body
-        const user = await User.findOne({ where: { Email: email } });
+        const { username, email, phoneNumber, password } = req.body;
+        console.log('Request Body:', req.body);
+
+        const user = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { Email: email },
+                    { phoneNumber: phoneNumber },
+                    { Username: username }
+                ]
+            }
+        });
 
         if (!user) {
+            console.log('User not found:', user);
             return res.status(404).json({ message: 'User not found' });
         }
 
@@ -57,10 +74,9 @@ const login = async (req, res) => {
         await Session.create({
             UserID: user.UserID,
             Token: token,
-            ExpiresAt: expiresAt // Use datetime string
+            ExpiresAt: expiresAt
         });
 
-        // Return token in response
         res.json({ message: 'Login successful', token });
     } catch (error) {
         console.error('Error during login:', error);
@@ -196,15 +212,24 @@ exports.deleteUser = async (req, res) => {
 
         res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
+        console.error('Error deleting user:', error);
         res.status(500).json({ message: 'Error deleting user', error: error.message });
     }
 };
-
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.findAll();
+        const { role, isVerified, isMember } = req.query;
+        console.log('Query Params:', req.query);
+
+        const filterConditions = {};
+        if (role) filterConditions.Role = role;
+        if (isVerified !== undefined) filterConditions.IsVerified = isVerified === 'true';
+        if (isMember !== undefined) filterConditions.IsMember = isMember === 'true';
+
+        const users = await User.findAll({ where: filterConditions });
         res.json(users);
     } catch (error) {
+        console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users', error: error.message });
     }
 };
