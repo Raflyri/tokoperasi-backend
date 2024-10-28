@@ -1,7 +1,6 @@
-const { DataTypes } = require('sequelize');
+const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-// Categories model
 const Category = sequelize.define('Category', {
     CategoryID: {
         type: DataTypes.INTEGER,
@@ -13,10 +12,9 @@ const Category = sequelize.define('Category', {
         allowNull: false
     }
 }, {
-    timestamps: false // Assuming no timestamps for categories
+    timestamps: false
 });
 
-// Products model
 const Product = sequelize.define('Product', {
     ProductID: {
         type: DataTypes.INTEGER,
@@ -24,7 +22,7 @@ const Product = sequelize.define('Product', {
         primaryKey: true
     },
     SellerID: {
-        type: DataTypes.INTEGER, // Refers to SellerID, no foreign key constraint
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     ProductName: {
@@ -46,24 +44,16 @@ const Product = sequelize.define('Product', {
     CategoryID: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'Categories',
+            model: Category,
             key: 'CategoryID'
-        },
-        allowNull: true
-    },
-    CreatedAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
-    },
-    UpdatedAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
+        }
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    createdAt: 'CreatedAt',
+    updatedAt: 'UpdatedAt'
 });
 
-// Product Images model
 const ProductImage = sequelize.define('ProductImage', {
     ImageID: {
         type: DataTypes.INTEGER,
@@ -73,25 +63,21 @@ const ProductImage = sequelize.define('ProductImage', {
     ProductID: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'Products',
+            model: Product,
             key: 'ProductID'
-        },
-        allowNull: false
+        }
     },
     ImageURL: {
         type: DataTypes.STRING,
         allowNull: false
-    },
-    CreatedAt: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    createdAt: 'CreatedAt',
+    updatedAt: false
 });
 
-// Relationships
 Product.belongsTo(Category, { foreignKey: 'CategoryID' });
-ProductImage.belongsTo(Product, { foreignKey: 'ProductID', onDelete: 'CASCADE' });
+Product.hasMany(ProductImage, { foreignKey: 'ProductID' });
 
-module.exports = { Category, Product, ProductImage };
+module.exports = { Product, Category, ProductImage };

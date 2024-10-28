@@ -31,15 +31,14 @@ exports.addProduct = async (req, res) => {
 
         // If there are images, add them to ProductImages table
         if (images && images.length > 0) {
-            for (const imageURL of images) {
-                await ProductImage.create({
-                    ProductID: newProduct.ProductID,
-                    ImageURL: imageURL
-                });
-            }
+            const productImages = images.map(imageURL => ({
+                ProductID: newProduct.ProductID,
+                ImageURL: imageURL
+            }));
+            await ProductImage.bulkCreate(productImages);
         }
 
-        res.status(201).json({ message: 'Product added successfully', product: newProduct });
+        res.status(201).json(newProduct);
     } catch (error) {
         res.status(500).json({ message: 'Error adding product', error: error.message });
     }
@@ -54,26 +53,26 @@ exports.updateProduct = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
-        product.ProductName = ProductName || product.ProductName;
-        product.Description = Description || product.Description;
-        product.Price = Price || product.Price;
-        product.Stock = Stock || product.Stock;
-        product.CategoryID = CategoryID || product.CategoryID;
 
-        await product.save();
+        await product.update({
+            ProductName,
+            Description,
+            Price,
+            Stock,
+            CategoryID
+        });
 
-        // If there are new images, add them
+        // If there are images, update them in ProductImages table
         if (images && images.length > 0) {
-            await ProductImage.destroy({ where: { ProductID: id } }); // Delete existing images
-            for (const imageURL of images) {
-                await ProductImage.create({
-                    ProductID: product.ProductID,
-                    ImageURL: imageURL
-                });
-            }
+            await ProductImage.destroy({ where: { ProductID: id } });
+            const productImages = images.map(imageURL => ({
+                ProductID: id,
+                ImageURL: imageURL
+            }));
+            await ProductImage.bulkCreate(productImages);
         }
 
-        res.json({ message: 'Product updated successfully', product });
+        res.json(product);
     } catch (error) {
         res.status(500).json({ message: 'Error updating product', error: error.message });
     }
@@ -87,6 +86,7 @@ exports.deleteProduct = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
+
         await product.destroy();
         res.json({ message: 'Product deleted successfully' });
     } catch (error) {

@@ -1,3 +1,4 @@
+const { Sequelize } = require('sequelize');
 const User = require('../models/userModel');
 const Session = require('../models/sessionsModel');
 const auditController = require('./auditController');
@@ -30,39 +31,39 @@ exports.register = async (req, res) => {
     }
 };
 
-exports.login = async (req, res) => {
-    const { emailOrPhone, password } = req.body;
+const login = async (req, res) => {
     try {
-        const user = await User.findOne({
-            where: {
-                [Sequelize.Op.or]: [
-                    { Email: emailOrPhone },
-                    { phoneNumber: emailOrPhone }
-                ]
-            }
-        });
+        const { email, password } = req.body;
+        console.log('Request Body:', req.body); // Log request body
+        const user = await User.findOne({ where: { Email: email } });
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid email/phone or password' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
+        console.log('User:', user.toJSON()); // Log user details
         const isMatch = await bcrypt.compare(password, user.PasswordHash);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid email/phone or password' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Generate JWT
         const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        // Convert Unix timestamp to datetime string
         const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
 
+        // Save session to the database
         await Session.create({
             UserID: user.UserID,
             Token: token,
-            CreatedAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
-            ExpiresAt: expiresAt
+            ExpiresAt: expiresAt // Use datetime string
         });
 
-        res.json({ token });
+        // Return token in response
+        res.json({ message: 'Login successful', token });
     } catch (error) {
+        console.error('Error during login:', error);
         res.status(500).json({ message: 'Error during login', error: error.message });
     }
 };
@@ -216,4 +217,16 @@ exports.logout = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Error during logout', error: error.message });
     }
+};
+
+module.exports = {
+    register: exports.register,
+    updateUser: exports.updateUser,
+    registerSeller: exports.registerSeller,
+    registerAdmin: exports.registerAdmin,
+    verifyUser: exports.verifyUser,
+    deleteUser: exports.deleteUser,
+    getAllUsers: exports.getAllUsers,
+    logout: exports.logout,
+    login
 };

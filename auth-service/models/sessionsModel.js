@@ -20,7 +20,7 @@ const Session = sequelize.define('Session', {
         defaultValue: DataTypes.NOW,
     },
     ExpiresAt: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.DATE,
         allowNull: false,
     }
 }, {
