@@ -1,0 +1,119 @@
+version: '3.8'
+services:
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./auth-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  product-service:
+    build: ./product-service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./product-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  cart-service:
+    build: ./cart-service
+    ports:
+      - "6000:6000"
+    volumes:
+      - ./cart-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  address-service:
+    build: ./address-service
+    ports:
+      - "7000:7000"
+    volumes:
+      - ./address-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  admin-service:
+    build: ./admin-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./admin-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./order-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "10000:10000"
+    volumes:
+      - ./payment-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  shipping-service:
+    build: ./shipping-service
+    ports:
+      - "11000:11000"
+    volumes:
+      - ./shipping-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - db
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./api-gateway:/usr/src/app
+    networks:
+      - tokoperasi-network
+    depends_on:
+      - auth-service
+      - product-service
+      - cart-service
+      - order-service
+      - payment-service
+      - shipping-service
+      - admin-service
+      - address-service
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tokoperasi
+    ports:
+      - "3306:3306"
+
+networks:
+  tokoperasi-network:
+    driver: bridge

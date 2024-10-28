@@ -1,0 +1,12 @@
+Time: 2024-10-26T07:47:06.454Z
+Request: {"username":"BapakBapak","email":"Bapak1@domain.com","gender":"male","birthdate":"1991-02-10","isMember":true}
+
+Time: 2024-10-26T07:49:55.462Z
+Request: {"username":"BapakBapak","email":"Bapak1@domain.com","gender":"female","birthdate":"1995-02-10","isMember":true}
+
+Time: 2024-10-26T07:54:58.074Z
+Request: {"username":"BapakBapak","email":"Bapak2@domain.com","gender":"male","birthdate":"1996-02-10","isMember":true}
+
+Time: 2024-10-26T07:59:59.759Z
+Request: {"username":"BapakBapak","email":"BapakBapak3@domain.com","gender":"male","birthdate":"1966-02-10","isMember":true,"IsVerified":true}
+
