@@ -10,6 +10,7 @@ services:
       - tokoperasi-network
     depends_on:
       - db
+    restart: always
 
   product-service:
     build: ./product-service
@@ -21,9 +22,11 @@ services:
       - tokoperasi-network
     depends_on:
       - db
+    restart: always
 
   cart-service:
-    build: ./cart-service
+    build:
+      context: ./cart-service
     ports:
       - "6000:6000"
     volumes:
@@ -32,6 +35,7 @@ services:
       - tokoperasi-network
     depends_on:
       - db
+    restart: always
 
   address-service:
     build: ./address-service
@@ -43,6 +47,7 @@ services:
       - tokoperasi-network
     depends_on:
       - db
+    restart: always
 
   admin-service:
     build: ./admin-service
@@ -54,9 +59,11 @@ services:
       - tokoperasi-network
     depends_on:
       - db
+    restart: always
 
   order-service:
-    build: ./order-service
+    build:
+      context: ./order-service
     ports:
       - "9000:9000"
     volumes:
@@ -64,7 +71,10 @@ services:
     networks:
       - tokoperasi-network
     depends_on:
-      - db
+      - cart-service
+    restart: always
+    environment:
+      - CART_SERVICE_URL=http://cart-service:6000
 
   payment-service:
     build: ./payment-service
@@ -76,6 +86,7 @@ services:
       - tokoperasi-network
     depends_on:
       - db
+    restart: always
 
   shipping-service:
     build: ./shipping-service
@@ -87,6 +98,7 @@ services:
       - tokoperasi-network
     depends_on:
       - db
+    restart: always
 
   api-gateway:
     build: ./api-gateway
@@ -105,14 +117,16 @@ services:
       - shipping-service
       - admin-service
       - address-service
+    restart: always
 
   db:
     image: mysql:5.7
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: tokoperasi
     ports:
       - "3306:3306"
+    restart: always
 
 networks:
   tokoperasi-network:

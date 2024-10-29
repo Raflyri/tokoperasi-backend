@@ -51,15 +51,13 @@ exports.addItemToCart = async (req, res) => {
 // Get Cart by ID
 exports.getCartById = async (req, res) => {
     try {
-        const UserID = req.user.UserID; // Dapatkan UserID dari middleware
-        const cart = await Cart.findOne({
-            where: { UserID },
-            include: CartItem
-        });
+        const UserID = req.params.id;
+        const cart = await Cart.findOne({ where: { UserID }, include: [CartItem] });
         if (!cart) return res.status(404).json({ message: 'Cart not found' });
-        res.status(200).json({ cart });
+
+        res.json(cart);
     } catch (error) {
-        res.status(500).json({ message: 'Error retrieving cart', error: error.message });
+        res.status(500).json({ message: 'Error fetching cart', error: error.message });
     }
 };
 
@@ -99,7 +97,7 @@ exports.deleteCartItem = async (req, res) => {
 // Clear Cart
 exports.clearCart = async (req, res) => {
     try {
-        const UserID = req.user.UserID; // Dapatkan UserID dari middleware
+        const UserID = req.params.id;
         const cart = await Cart.findOne({ where: { UserID } });
         if (!cart) return res.status(404).json({ message: 'Cart not found' });
 

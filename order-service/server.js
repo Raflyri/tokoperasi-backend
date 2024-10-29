@@ -5,7 +5,8 @@ const app = express();
 const sequelize = require('./config/database');  // Import sequelize instance
 
 app.use(bodyParser.json());
-app.use('/orders', orderRoutes);
+
+app.use('/api/orders', orderRoutes);
 
 const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {

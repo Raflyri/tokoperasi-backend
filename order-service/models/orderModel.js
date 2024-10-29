@@ -2,25 +2,42 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Order = sequelize.define('Order', {
-    id: {
+    OrderID: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
-        primaryKey: true
+        primaryKey: true,
     },
-    userId: {
+    UserID: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        comment: "Referensi ke UserID dari Auth Service",
     },
-    totalAmount: {
-        type: DataTypes.FLOAT,
-        allowNull: false
+    OrderStatus: {
+        type: DataTypes.ENUM('pending', 'paid', 'shipped', 'completed'),
+        allowNull: false,
     },
-    status: {
-        type: DataTypes.STRING,
-        allowNull: false
-    }
+    TotalAmount: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+    },
+    ShippingAddressID: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        comment: "Referensi ke AddressID dari Address Service",
+    },
+    CreatedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+    },
+    UpdatedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+    },
 }, {
-    timestamps: true
+    tableName: 'Orders', // Sesuaikan dengan nama tabel di database
+    timestamps: true,
+    createdAt: 'CreatedAt',
+    updatedAt: 'UpdatedAt',
 });
 
 module.exports = Order;

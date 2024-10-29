@@ -1,4 +1,4 @@
-require('dotenv').config();  // Load variabel lingkungan dari .env file
+require('dotenv').config();
 const express = require('express');
 const proxy = require('express-http-proxy');
 const app = express();
@@ -12,13 +12,25 @@ const proxyOptions = {
 };
 
 // Proxy ke Authentication Service
-app.use('/auth', proxy(process.env.AUTH_SERVICE_URL));
+app.use('/auth', proxy(process.env.AUTH_SERVICE_URL, proxyOptions));
 
 // Proxy ke Product Service
-app.use('/products', proxy(process.env.PRODUCT_SERVICE_URL));
+app.use('/products', proxy(process.env.PRODUCT_SERVICE_URL, proxyOptions));
 
 // Proxy ke Cart and Order Service
-app.use('/orders', proxy(process.env.ORDER_SERVICE_URL));
+app.use('/orders', proxy(process.env.ORDER_SERVICE_URL, proxyOptions));
+
+// Proxy ke Payment Service
+app.use('/payments', proxy(process.env.PAYMENT_SERVICE_URL, proxyOptions));
+
+// Proxy ke Shipping Service
+app.use('/shipping', proxy(process.env.SHIPPING_SERVICE_URL, proxyOptions));
+
+// Proxy ke Admin Service
+app.use('/admin', proxy(process.env.ADMIN_SERVICE_URL, proxyOptions));
+
+// Proxy ke Address Service
+app.use('/addresses', proxy(process.env.ADDRESS_SERVICE_URL, proxyOptions));
 
 // Jalankan API Gateway
 const PORT = process.env.PORT || 3000;
