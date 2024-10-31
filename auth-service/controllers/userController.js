@@ -40,15 +40,14 @@ exports.register = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { username, email, phoneNumber, password } = req.body;
+        const { identifier, password } = req.body; // Menggunakan 'identifier' untuk email atau nomor telepon
         console.log('Request Body:', req.body);
 
         const user = await User.findOne({
             where: {
                 [Op.or]: [
-                    { Email: email },
-                    { phoneNumber: phoneNumber },
-                    { Username: username }
+                    { Email: identifier },
+                    { phoneNumber: identifier }
                 ]
             }
         });
