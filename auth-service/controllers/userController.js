@@ -10,30 +10,34 @@ const { Op } = require('sequelize');
 
 exports.register = async (req, res) => {
     try {
-        const { username, email, password, role, phoneNumber, storeName, profilePicture } = req.body;
+        const { username, identifier, password, role, storeName, profilePicture } = req.body;
         console.log('Request Body:', req.body);
-        const hashedPassword = await bcrypt.hash(password, 10);
-        if (role === 'seller' && !storeName) {
-            return res.status(400).json({ message: 'Store name is required for sellers' });
+
+        // Validasi apakah identifier adalah email atau nomor telepon
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+        const isPhoneNumber = /^\d{10,15}$/.test(identifier);
+
+        if (!isEmail && !isPhoneNumber) {
+            return res.status(400).json({ message: 'Identifier must be a valid email or phone number' });
         }
 
         const newUser = await User.create({
             Username: username,
-            Email: email,
+            Email: isEmail ? identifier : null,
+            phoneNumber: isPhoneNumber ? identifier : null,
             PasswordHash: hashedPassword,
             Role: role || 'buyer',
             IsVerified: false,
-            phoneNumber,
             storeName: role === 'seller' ? storeName : null,
             profilePicture
         });
 
         // Log audit record for user registration
-        await auditController.logCreateAction(newUser.UserID, username, newUser.secure_id, 'User created');
+        await auditController.logCreateAction(newUser.UserID, identifier, newUser.secure_id, 'User created');
 
         res.status(201).json({ message: 'User registered successfully', user: newUser });
     } catch (error) {
-        console.error('Error during login:', error);
+        console.error('Error during registration:', error);
         res.status(500).json({ message: 'Error registering user', error: error.message });
     }
 };
@@ -76,7 +80,13 @@ const login = async (req, res) => {
             ExpiresAt: expiresAt
         });
 
-        res.json({ message: 'Login successful', token });
+        console.log(
+            'Login successful:', user.Username, 
+            'ID User:', user.id, 
+            'Token:', token, 
+            'ExpUntill:', expiresAt
+        );
+        res.status(200).json({token});
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: 'Error during login', error: error.message });
@@ -91,7 +101,7 @@ exports.updateUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { username, email } = req.body;
+        const { username, email, gender, birthdate, isMember } = req.body;
 
         // Log before update
         console.log('Before Update:', user.toJSON());
@@ -104,6 +114,24 @@ exports.updateUser = async (req, res) => {
         if (email && email !== user.Email) {
             updatedFields.Email = { before: user.Email, after: email };
             user.Email = email;
+        }
+        if (gender && gender !== user.Gender) {
+            updatedFields.Gender = { before: user.Gender, after: gender };
+            user.Gender = gender;
+        }
+        if (birthdate && birthdate !== user.Birthdate) {
+            updatedFields.Birthdate = { before: user.Birthdate, after: birthdate };
+            user.Birthdate = birthdate;
+        }
+        if (isMember !== undefined && isMember !== user.IsMember) {
+            updatedFields.IsMember = { before: user.IsMember, after: isMember };
+            user.IsMember = isMember;
+        }
+
+        // Perbarui profilePicture jika ada file yang diunggah
+        if (req.file) {
+            updatedFields.profilePicture = { before: user.profilePicture, after: req.file.path };
+            user.profilePicture = req.file.path;
         }
 
         await user.save();
@@ -120,7 +148,7 @@ exports.updateUser = async (req, res) => {
                 modified_by: req.user.username,
                 modified_by_id: req.user.secure_id,
                 modified_date: Math.floor(Date.now() / 1000),
-                changes: updatedFields
+                changes: JSON.stringify(updatedFields) // Convert changes object to JSON string
             }
         );
 
@@ -217,7 +245,7 @@ exports.deleteUser = async (req, res) => {
 };
 exports.getAllUsers = async (req, res) => {
     try {
-        const { role, isVerified, isMember } = req.query;
+        const { username, id, role, isVerified, isMember } = req.query;
         console.log('Query Params:', req.query);
 
         const filterConditions = {};
@@ -230,6 +258,27 @@ exports.getAllUsers = async (req, res) => {
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users', error: error.message });
+    }
+};
+
+exports.getUserDetails = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await User.findByPk(userId, {
+            include: [{
+                model: Session,
+                attributes: ['Token', 'CreatedAt', 'ExpiresAt']
+            }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error('Error retrieving user details:', error);
+        res.status(500).json({ message: 'Error retrieving user details', error: error.message });
     }
 };
 

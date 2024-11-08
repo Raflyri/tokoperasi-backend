@@ -1,34 +1,46 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Address = sequelize.define('Address', {
-    id: {
+const UserAddress = sequelize.define('UserAddress', {
+    AddressID: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
     },
-    userId: {
+    UserID: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    addressLine1: {
+    AddressLine1: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    addressLine2: {
+    AddressLine2: {
         type: DataTypes.STRING,
         allowNull: true
     },
-    city: {
+    City: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    postalCode: {
+    Province: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    PostalCode: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    IsDefault: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    CreatedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
 }, {
-    timestamps: true
+    timestamps: false
 });
 
-module.exports = Address;
+module.exports = UserAddress;

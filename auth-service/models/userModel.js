@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const Session = require('./sessionsModel');
 
 const User = sequelize.define('User', {
     UserID: {
@@ -16,7 +17,7 @@ const User = sequelize.define('User', {
     },
     Email: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true,
         validate: {
             isEmail: true,
@@ -67,6 +68,9 @@ const User = sequelize.define('User', {
 }, {
     timestamps: true,
     paranoid: true,
+    tableName: 'Users',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
 });
 
 User.beforeCreate(async (user) => {
@@ -77,5 +81,9 @@ User.beforeCreate(async (user) => {
         user.PasswordHash = await bcrypt.hash(user.PasswordHash, 10);
     }
 });
+
+User.hasMany(Session, { foreignKey: 'UserID' });
+
+Session.belongsTo(User, { foreignKey: 'UserID' });
 
 module.exports = User;
