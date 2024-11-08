@@ -7,7 +7,7 @@ exports.logCreateAction = async (userId, createdBy, createdById, changes) => {
         created_by: createdBy,
         created_by_id: createdById,
         created_date: Math.floor(Date.now() / 1000),
-        changes
+        changes: JSON.stringify(changes) // Convert changes object to JSON string
     });
 };
 
@@ -18,7 +18,7 @@ exports.logUpdateAction = async (userId, modifiedBy, modifiedById, changes) => {
         modified_by: modifiedBy,
         modified_by_id: modifiedById,
         modified_date: Math.floor(Date.now() / 1000),
-        changes
+        changes: JSON.stringify(changes) // Convert changes object to JSON string
     });
 };
 
