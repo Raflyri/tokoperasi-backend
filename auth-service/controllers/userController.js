@@ -25,7 +25,11 @@ exports.register = async (req, res) => {
             Username: username,
             Email: isEmail ? identifier : null,
             phoneNumber: isPhoneNumber ? identifier : null,
+<<<<<<< HEAD
             PasswordHash: await bcrypt.hash(password, 10),
+=======
+            PasswordHash: hashedPassword,
+>>>>>>> 95192612bce36d7f78911807e3fb1e0fb7576a06
             Role: role || 'buyer',
             IsVerified: false,
             storeName: role === 'seller' ? storeName : null,
@@ -78,11 +82,19 @@ exports.login = async (req, res) => {
 
         console.log(
             'Login successful:', user.Username, 
+<<<<<<< HEAD
             'ID User:', user.UserID, 
             'Token:', token, 
             'ExpUntill:', expiresAt
         );
         res.status(200).json({ token });
+=======
+            'ID User:', user.id, 
+            'Token:', token, 
+            'ExpUntill:', expiresAt
+        );
+        res.status(200).json({token});
+>>>>>>> 95192612bce36d7f78911807e3fb1e0fb7576a06
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: 'Error during login', error: error.message });
@@ -123,6 +135,10 @@ exports.updateUser = async (req, res) => {
             user.IsMember = isMember;
         }
 
+<<<<<<< HEAD
+=======
+        // Perbarui profilePicture jika ada file yang diunggah
+>>>>>>> 95192612bce36d7f78911807e3fb1e0fb7576a06
         if (req.file) {
             updatedFields.profilePicture = { before: user.profilePicture, after: req.file.path };
             user.profilePicture = req.file.path;
@@ -140,7 +156,11 @@ exports.updateUser = async (req, res) => {
                 modified_by: req.user.username,
                 modified_by_id: req.user.secure_id,
                 modified_date: Math.floor(Date.now() / 1000),
+<<<<<<< HEAD
                 changes: JSON.stringify(updatedFields)
+=======
+                changes: JSON.stringify(updatedFields) // Convert changes object to JSON string
+>>>>>>> 95192612bce36d7f78911807e3fb1e0fb7576a06
             }
         );
 
@@ -192,6 +212,27 @@ exports.getAllUsers = async (req, res) => {
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users', error: error.message });
+    }
+};
+
+exports.getUserDetails = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await User.findByPk(userId, {
+            include: [{
+                model: Session,
+                attributes: ['Token', 'CreatedAt', 'ExpiresAt']
+            }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        console.error('Error retrieving user details:', error);
+        res.status(500).json({ message: 'Error retrieving user details', error: error.message });
     }
 };
 

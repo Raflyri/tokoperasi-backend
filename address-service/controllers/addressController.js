@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 const UserAddress = require('../models/addressModel');
+=======
+const UserAddress = require('../models/userAddressModel');
+>>>>>>> 95192612bce36d7f78911807e3fb1e0fb7576a06
 
 // Get all addresses
 exports.getAddresses = async (req, res) => {
