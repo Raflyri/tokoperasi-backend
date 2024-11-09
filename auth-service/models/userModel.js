@@ -69,8 +69,8 @@ const User = sequelize.define('User', {
     timestamps: true,
     paranoid: true,
     tableName: 'Users',
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    createdAt: 'CreatedAt',
+    updatedAt: 'UpdatedAt',
 });
 
 User.beforeCreate(async (user) => {
@@ -83,7 +83,6 @@ User.beforeCreate(async (user) => {
 });
 
 User.hasMany(Session, { foreignKey: 'UserID' });
-
 Session.belongsTo(User, { foreignKey: 'UserID' });
 
 module.exports = User;

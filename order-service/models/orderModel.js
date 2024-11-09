@@ -34,7 +34,7 @@ const Order = sequelize.define('Order', {
         defaultValue: DataTypes.NOW,
     },
 }, {
-    tableName: 'Orders', // Sesuaikan dengan nama tabel di database
+    tableName: 'Orders',
     timestamps: true,
     createdAt: 'CreatedAt',
     updatedAt: 'UpdatedAt',

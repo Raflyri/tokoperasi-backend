@@ -25,7 +25,7 @@ exports.register = async (req, res) => {
             Username: username,
             Email: isEmail ? identifier : null,
             phoneNumber: isPhoneNumber ? identifier : null,
-            PasswordHash: hashedPassword,
+            PasswordHash: await bcrypt.hash(password, 10),
             Role: role || 'buyer',
             IsVerified: false,
             storeName: role === 'seller' ? storeName : null,
@@ -42,9 +42,9 @@ exports.register = async (req, res) => {
     }
 };
 
-const login = async (req, res) => {
+exports.login = async (req, res) => {
     try {
-        const { identifier, password } = req.body; // Menggunakan 'identifier' untuk email atau nomor telepon
+        const { identifier, password } = req.body;
         console.log('Request Body:', req.body);
 
         const user = await User.findOne({
@@ -58,22 +58,18 @@ const login = async (req, res) => {
 
         if (!user) {
             console.log('User not found:', user);
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(401).json({ message: 'User tidak ditemukan' });
         }
 
-        console.log('User:', user.toJSON()); // Log user details
         const isMatch = await bcrypt.compare(password, user.PasswordHash);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ message: 'Password yang dimasukkan salah' });
         }
 
-        // Generate JWT
-        const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '12h' });
 
-        // Convert Unix timestamp to datetime string
         const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
 
-        // Save session to the database
         await Session.create({
             UserID: user.UserID,
             Token: token,
@@ -82,11 +78,11 @@ const login = async (req, res) => {
 
         console.log(
             'Login successful:', user.Username, 
-            'ID User:', user.id, 
+            'ID User:', user.UserID, 
             'Token:', token, 
             'ExpUntill:', expiresAt
         );
-        res.status(200).json({token});
+        res.status(200).json({ token });
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: 'Error during login', error: error.message });
@@ -103,7 +99,6 @@ exports.updateUser = async (req, res) => {
 
         const { username, email, gender, birthdate, isMember } = req.body;
 
-        // Log before update
         console.log('Before Update:', user.toJSON());
 
         const updatedFields = {};
@@ -128,7 +123,6 @@ exports.updateUser = async (req, res) => {
             user.IsMember = isMember;
         }
 
-        // Perbarui profilePicture jika ada file yang diunggah
         if (req.file) {
             updatedFields.profilePicture = { before: user.profilePicture, after: req.file.path };
             user.profilePicture = req.file.path;
@@ -136,10 +130,8 @@ exports.updateUser = async (req, res) => {
 
         await user.save();
 
-        // Log after update
         console.log('After Update:', user.toJSON());
 
-        // Log audit record for user update
         await auditController.logUpdateAction(
             userId,
             req.user.username,
@@ -148,11 +140,10 @@ exports.updateUser = async (req, res) => {
                 modified_by: req.user.username,
                 modified_by_id: req.user.secure_id,
                 modified_date: Math.floor(Date.now() / 1000),
-                changes: JSON.stringify(updatedFields) // Convert changes object to JSON string
+                changes: JSON.stringify(updatedFields)
             }
         );
 
-        // Log request to file
         const logData = `Time: ${new Date().toISOString()}\nRequest: ${JSON.stringify(req.body)}\n\n`;
         fs.appendFileSync(path.join(__dirname, 'request.log'), logData);
 
@@ -162,51 +153,58 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-// Register Seller
-exports.registerSeller = async (req, res) => {
+exports.getUserDetails = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
-        if (!username || !email || !password) {
-            return res.status(400).json({ message: 'Username, email, and password are required' });
+        const userId = req.params.id;
+        const user = await User.findByPk(userId, {
+            include: [{
+                model: Session,
+                attributes: ['Token', 'CreatedAt', 'ExpiresAt']
+            }]
+        });
+
+        
+
+        if (!user) {
+            return res.status(404).json({ message: 'Anda belum login, silahkan login dulu' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({
-            Username: username,
-            Email: email,
-            PasswordHash: hashedPassword,
-            Role: 'seller',
-            IsVerified: false
-        });
-        res.status(201).json({ message: 'Seller registered successfully', user: newUser });
+        res.status(200).json({ user });
+        console.log(user);
     } catch (error) {
-        res.status(500).json({ message: 'Error registering seller', error: error.message });
+        console.error('Error retrieving user details:', error);
+        res.status(500).json({ message: 'Error retrieving user details', error: error.message });
     }
 };
 
-// Register Admin
-exports.registerAdmin = async (req, res) => {
+exports.getAllUsers = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
-        if (!username || !email || !password) {
-            return res.status(400).json({ message: 'Username, email, and password are required' });
-        }
+        const { username, id, role, isVerified, isMember } = req.query;
+        console.log('Query Params:', req.query);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({
-            Username: username,
-            Email: email,
-            PasswordHash: hashedPassword,
-            Role: 'admin',
-            IsVerified: true
-        });
-        res.status(201).json({ message: 'Admin registered successfully', user: newUser });
+        const filterConditions = {};
+        if (role) filterConditions.Role = role;
+        if (isVerified !== undefined) filterConditions.IsVerified = isVerified === 'true';
+        if (isMember !== undefined) filterConditions.IsMember = isMember === 'true';
+
+        const users = await User.findAll({ where: filterConditions });
+        res.json(users);
     } catch (error) {
-        res.status(500).json({ message: 'Error registering admin', error: error.message });
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Error fetching users', error: error.message });
     }
 };
 
-// Verifikasi User oleh Admin
+exports.logout = async (req, res) => {
+    const token = req.headers['authorization'];
+    try {
+        await Session.destroy({ where: { Token: token } });
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error during logout', error: error.message });
+    }
+};
+
 exports.verifyUser = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -230,11 +228,9 @@ exports.deleteUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Soft delete the user
         user.deleted_at = Math.floor(Date.now() / 1000);
         await user.save();
 
-        // Log audit record for user deletion
         await auditController.logDeleteAction(userId, req.user.username, req.user.secure_id);
 
         res.status(200).json({ message: 'User deleted successfully' });
@@ -243,63 +239,58 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: 'Error deleting user', error: error.message });
     }
 };
-exports.getAllUsers = async (req, res) => {
+
+exports.registerSeller = async (req, res) => {
     try {
-        const { username, id, role, isVerified, isMember } = req.query;
-        console.log('Query Params:', req.query);
-
-        const filterConditions = {};
-        if (role) filterConditions.Role = role;
-        if (isVerified !== undefined) filterConditions.IsVerified = isVerified === 'true';
-        if (isMember !== undefined) filterConditions.IsMember = isMember === 'true';
-
-        const users = await User.findAll({ where: filterConditions });
-        res.json(users);
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).json({ message: 'Error fetching users', error: error.message });
-    }
-};
-
-exports.getUserDetails = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const user = await User.findByPk(userId, {
-            include: [{
-                model: Session,
-                attributes: ['Token', 'CreatedAt', 'ExpiresAt']
-            }]
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+        const { username, email, password } = req.body;
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'Username, email, and password are required' });
         }
 
-        res.status(200).json({ user });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = await User.create({
+            Username: username,
+            Email: email,
+            PasswordHash: hashedPassword,
+            Role: 'seller',
+            IsVerified: false
+        });
+        res.status(201).json({ message: 'Seller registered successfully', user: newUser });
     } catch (error) {
-        console.error('Error retrieving user details:', error);
-        res.status(500).json({ message: 'Error retrieving user details', error: error.message });
+        res.status(500).json({ message: 'Error registering seller', error: error.message });
     }
 };
 
-exports.logout = async (req, res) => {
-    const token = req.headers['authorization'];
+exports.registerAdmin = async (req, res) => {
     try {
-        await Session.destroy({ where: { Token: token } });
-        res.status(200).json({ message: 'Logged out successfully' });
+        const { username, email, password } = req.body;
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'Username, email, and password are required' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = await User.create({
+            Username: username,
+            Email: email,
+            PasswordHash: hashedPassword,
+            Role: 'admin',
+            IsVerified: true
+        });
+        res.status(201).json({ message: 'Admin registered successfully', user: newUser });
     } catch (error) {
-        res.status(500).json({ message: 'Error during logout', error: error.message });
+        res.status(500).json({ message: 'Error registering admin', error: error.message });
     }
 };
 
 module.exports = {
     register: exports.register,
+    login: exports.login,
     updateUser: exports.updateUser,
-    registerSeller: exports.registerSeller,
-    registerAdmin: exports.registerAdmin,
-    verifyUser: exports.verifyUser,
-    deleteUser: exports.deleteUser,
+    getUserDetails: exports.getUserDetails,
     getAllUsers: exports.getAllUsers,
     logout: exports.logout,
-    login
+    verifyUser: exports.verifyUser,
+    deleteUser: exports.deleteUser,
+    registerSeller: exports.registerSeller,
+    registerAdmin: exports.registerAdmin
 };

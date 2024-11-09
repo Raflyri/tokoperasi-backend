@@ -1,4 +1,4 @@
-const UserAddress = require('../models/userAddressModel');
+const UserAddress = require('../models/addressModel');
 
 // Get all addresses
 exports.getAddresses = async (req, res) => {
