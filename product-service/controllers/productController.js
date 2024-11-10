@@ -1,14 +1,11 @@
 const { Product, Category, ProductImage } = require('../models/productModel');
 const { Op } = require('sequelize');
 
-// Get all products with category and images
+// Get all products
 exports.getProducts = async (req, res) => {
     try {
         const products = await Product.findAll({
-            include: [
-                { model: Category, attributes: ['CategoryName'] },
-                { model: ProductImage, attributes: ['ImageURL'] }
-            ]
+            include: [Category, ProductImage]
         });
         res.json(products);
     } catch (error) {
@@ -18,7 +15,7 @@ exports.getProducts = async (req, res) => {
 
 // Add a new product with optional images
 exports.addProduct = async (req, res) => {
-    const { ProductName, Description, Price, Stock, CategoryID, SellerID, images } = req.body;
+    const { ProductName, Description, Price, Stock, CategoryID, SellerID } = req.body;
     try {
         const newProduct = await Product.create({
             ProductName,
@@ -30,10 +27,10 @@ exports.addProduct = async (req, res) => {
         });
 
         // If there are images, add them to ProductImages table
-        if (images && images.length > 0) {
-            const productImages = images.map(imageURL => ({
+        if (req.files && req.files.length > 0) {
+            const productImages = req.files.map(file => ({
                 ProductID: newProduct.ProductID,
-                ImageURL: imageURL
+                ImageURL: file.path // Menyimpan path file yang diunggah
             }));
             await ProductImage.bulkCreate(productImages);
         }
@@ -47,7 +44,7 @@ exports.addProduct = async (req, res) => {
 // Update a product
 exports.updateProduct = async (req, res) => {
     const { id } = req.params;
-    const { ProductName, Description, Price, Stock, CategoryID, images } = req.body;
+    const { ProductName, Description, Price, Stock, CategoryID } = req.body;
     try {
         const product = await Product.findByPk(id);
         if (!product) {
@@ -63,11 +60,11 @@ exports.updateProduct = async (req, res) => {
         });
 
         // If there are images, update them in ProductImages table
-        if (images && images.length > 0) {
+        if (req.files && req.files.length > 0) {
             await ProductImage.destroy({ where: { ProductID: id } });
-            const productImages = images.map(imageURL => ({
+            const productImages = req.files.map(file => ({
                 ProductID: id,
-                ImageURL: imageURL
+                ImageURL: file.path // Menyimpan path file yang diunggah
             }));
             await ProductImage.bulkCreate(productImages);
         }
