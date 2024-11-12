@@ -10,7 +10,7 @@ const { Op } = require('sequelize');
 
 exports.register = async (req, res) => {
     try {
-        const { username, identifier, password, role, storeName, profilePicture } = req.body;
+        const { username, identifier, password, role, storeName } = req.body;
         console.log('Request Body:', req.body);
 
         // Validasi apakah identifier adalah email atau nomor telepon
@@ -20,6 +20,12 @@ exports.register = async (req, res) => {
         if (!isEmail && !isPhoneNumber) {
             return res.status(400).json({ message: 'Identifier must be a valid email or phone number' });
         }
+
+        // Tentukan jalur gambar profil default
+        const defaultProfilePicture = 'uploads/images/logo_only_white.png';
+
+        // Gunakan gambar yang diunggah jika ada, jika tidak gunakan gambar default
+        const profilePicture = req.file ? req.file.path : defaultProfilePicture;
 
         const newUser = await User.create({
             Username: username,

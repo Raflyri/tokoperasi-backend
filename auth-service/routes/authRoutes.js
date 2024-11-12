@@ -38,7 +38,7 @@ const upload = multer({
 router.post('/login', userController.login);
 
 // Route untuk register
-router.post('/register', userController.register);
+router.post('/register', upload.single('profilePicture'), userController.register);
 
 // Route untuk update user (memerlukan autentikasi)
 router.put('/update/:id', authenticate, upload.single('profilePicture'), userController.updateUser);
