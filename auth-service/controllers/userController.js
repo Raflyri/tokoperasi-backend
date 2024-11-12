@@ -72,9 +72,12 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Password yang dimasukkan salah' });
         }
 
-        const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '12h' });
+        //Token Expired for 24 hour
+        //const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        //const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
 
-        const expiresAt = new Date(Date.now() + 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
+        const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET);
+        const expiresAt = null;
 
         await Session.create({
             UserID: user.UserID,
@@ -88,7 +91,18 @@ exports.login = async (req, res) => {
             'Token:', token, 
             'ExpUntill:', expiresAt
         );
-        res.status(200).json({ token });
+
+        // Menampilkan informasi yang diinginkan dalam respon
+        res.status(200).json({
+            UserID: user.UserID,
+            Username: user.Username,
+            Email: user.Email,
+            phoneNumber: user.phoneNumber,
+            Role: user.Role,
+            IsMember: user.IsMember,
+            IsVerified: user.IsVerified,
+            Token: token
+        });
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: 'Error during login', error: error.message });
