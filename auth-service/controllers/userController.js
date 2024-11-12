@@ -72,12 +72,13 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Password yang dimasukkan salah' });
         }
 
-        //Token Expired for 24 hour
-        //const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '24h' });
-        //const expiresAt = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
+        //Token Expired for 1 Month
+        const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        const expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
 
-        const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET);
-        const expiresAt = null;
+        //No Expired Token
+        //const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET);
+        //const expiresAt = null;
 
         await Session.create({
             UserID: user.UserID,
