@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
+const { generateOTP } = require('../utils/otp');
+const { sendOTP } = require('../utils/email');
 
 exports.register = async (req, res) => {
     try {
@@ -27,6 +29,10 @@ exports.register = async (req, res) => {
         // Gunakan gambar yang diunggah jika ada, jika tidak gunakan gambar default
         const profilePicture = req.file ? req.file.path : defaultProfilePicture;
 
+        // Generate OTP
+        const otp = generateOTP();
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+
         const newUser = await User.create({
             Username: username,
             Email: isEmail ? identifier : null,
@@ -35,13 +41,20 @@ exports.register = async (req, res) => {
             Role: role || 'buyer',
             IsVerified: false,
             storeName: role === 'seller' ? storeName : null,
-            profilePicture
+            profilePicture,
+            otp,
+            otpExpiresAt
         });
+
+        // Send OTP to user's email
+        if (isEmail) {
+            await sendOTP(identifier, otp);
+        }
 
         // Log audit record for user registration
         await auditController.logCreateAction(newUser.UserID, identifier, newUser.secure_id, 'User created');
 
-        res.status(201).json({ message: 'User registered successfully', user: newUser });
+        res.status(201).json({ message: 'User registered successfully. Please verify your email with the OTP sent.', user: newUser });
     } catch (error) {
         console.error('Error during registration:', error);
         res.status(500).json({ message: 'Error registering user', error: error.message });
@@ -99,6 +112,8 @@ exports.login = async (req, res) => {
             Username: user.Username,
             Email: user.Email,
             phoneNumber: user.phoneNumber,
+            birthdate: user.Birthdate,
+            gender: user.Gender,
             Role: user.Role,
             IsMember: user.IsMember,
             IsVerified: user.IsVerified,
@@ -241,6 +256,39 @@ exports.verifyUser = async (req, res) => {
     }
 };
 
+exports.verifyOTP = async (req, res) => {
+    try {
+        const { identifier, otp } = req.body;
+
+        const user = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { Email: identifier },
+                    { phoneNumber: identifier }
+                ],
+                otp,
+                otpExpiresAt: {
+                    [Op.gt]: new Date()
+                }
+            }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid OTP or OTP has expired' });
+        }
+
+        user.IsVerified = true;
+        user.otp = null;
+        user.otpExpiresAt = null;
+        await user.save();
+
+        res.status(200).json({ message: 'User verified successfully', user });
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        res.status(500).json({ message: 'Error verifying OTP', error: error.message });
+    }
+};
+
 exports.deleteUser = async (req, res) => {
     try {
         const userId = req.params.id;
@@ -303,6 +351,8 @@ exports.registerAdmin = async (req, res) => {
     }
 };
 
+
+
 module.exports = {
     register: exports.register,
     login: exports.login,
@@ -311,6 +361,7 @@ module.exports = {
     getAllUsers: exports.getAllUsers,
     logout: exports.logout,
     verifyUser: exports.verifyUser,
+    verifyOTP: exports.verifyOTP,
     deleteUser: exports.deleteUser,
     registerSeller: exports.registerSeller,
     registerAdmin: exports.registerAdmin

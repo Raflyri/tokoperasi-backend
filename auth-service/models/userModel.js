@@ -64,7 +64,15 @@ const User = sequelize.define('User', {
     },
     deletedAt: {
         type: DataTypes.DATE,
-    },    
+    },
+    otp: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    otpExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    }    
 }, {
     timestamps: true,
     paranoid: true,
