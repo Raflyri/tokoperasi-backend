@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const User = require('./userModel'); // Pastikan impor model User benar
 
 const AuditLog = sequelize.define('AuditLog', {
     id: {
@@ -9,7 +10,7 @@ const AuditLog = sequelize.define('AuditLog', {
         primaryKey: true,
     },
     action: {
-        type: DataTypes.ENUM('create', 'update', 'delete'),
+        type: DataTypes.ENUM('create', 'update', 'delete', 'otp'),
         allowNull: false,
     },
     user_id: {
@@ -27,8 +28,20 @@ const AuditLog = sequelize.define('AuditLog', {
         type: DataTypes.STRING,
     },
     created_date: {
-        type: DataTypes.DATE,  // Ubah tipe data menjadi DATE
+        type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
+    },
+    otp: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    otp_id: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    otpExpiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
     },
     modified_by: {
         type: DataTypes.STRING,
@@ -37,10 +50,10 @@ const AuditLog = sequelize.define('AuditLog', {
         type: DataTypes.STRING,
     },
     modified_date: {
-        type: DataTypes.DATE,  // Ubah tipe data menjadi DATE
+        type: DataTypes.DATE,
     },
     deleted_at: {
-        type: DataTypes.DATE,  // Ubah tipe data menjadi DATE
+        type: DataTypes.DATE,
     },
     deleted_by: {
         type: DataTypes.STRING,
@@ -52,7 +65,9 @@ const AuditLog = sequelize.define('AuditLog', {
         type: DataTypes.TEXT,
     }
 }, {
-    timestamps: false, // Explicitly handling our own timestamps
+    timestamps: false,
+    tableName: 'AuditLogs',
 });
+
 
 module.exports = AuditLog;

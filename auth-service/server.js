@@ -1,8 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const authRoutes = require('./routes/authRoutes');  
 const sequelize = require('./config/database'); 
-require('dotenv').config();
 
 const app = express();
 app.use(express.json());

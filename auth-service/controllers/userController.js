@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const User = require('../models/userModel');
+const AuditLog = require('../models/auditModel');
 const Session = require('../models/sessionsModel');
 const auditController = require('./auditController');
 const bcrypt = require('bcryptjs');
@@ -7,20 +8,25 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
-const { generateOTP } = require('../utils/otp');
-const { sendOTP } = require('../utils/email');
+const { generateOTPSMS, generateOTPEmail, validateOTP } = require('../utils/otp');
 
 exports.register = async (req, res) => {
     try {
-        const { username, identifier, password, role, storeName } = req.body;
+        const { username, email, phoneNumber, password, ReferalNum, KoperasiName, MemberNum } = req.body;
         console.log('Request Body:', req.body);
 
-        // Validasi apakah identifier adalah email atau nomor telepon
-        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-        const isPhoneNumber = /^\d{10,15}$/.test(identifier);
+        // Validasi apakah email atau nomor telepon sudah ada di database
+        const existingUser = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { Email: email },
+                    { phoneNumber: phoneNumber }
+                ]
+            }
+        });
 
-        if (!isEmail && !isPhoneNumber) {
-            return res.status(400).json({ message: 'Identifier must be a valid email or phone number' });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email or Phone Number already exists. Please use a different email or phone number.' });
         }
 
         // Tentukan jalur gambar profil default
@@ -29,32 +35,30 @@ exports.register = async (req, res) => {
         // Gunakan gambar yang diunggah jika ada, jika tidak gunakan gambar default
         const profilePicture = req.file ? req.file.path : defaultProfilePicture;
 
-        // Generate OTP
-        const otp = generateOTP();
-        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Buat pengguna baru
         const newUser = await User.create({
             Username: username,
-            Email: isEmail ? identifier : null,
-            phoneNumber: isPhoneNumber ? identifier : null,
-            PasswordHash: await bcrypt.hash(password, 10),
-            Role: role || 'buyer',
+            Email: email,
+            phoneNumber: phoneNumber,
+            PasswordHash: hashedPassword,
+            Role: 'buyer',
             IsVerified: false,
-            storeName: role === 'seller' ? storeName : null,
-            profilePicture,
-            otp,
-            otpExpiresAt
+            ReferalNum: ReferalNum || null,
+            KoperasiName: KoperasiName || null,
+            MemberNum: MemberNum || null,
+            profilePicture
         });
 
-        // Send OTP to user's email
-        if (isEmail) {
-            await sendOTP(identifier, otp);
-        }
-
         // Log audit record for user registration
-        await auditController.logCreateAction(newUser.UserID, identifier, newUser.secure_id, 'User created');
+        await auditController.logCreateAction(newUser.UserID, email, newUser.secure_id, 'User created');
 
-        res.status(201).json({ message: 'User registered successfully. Please verify your email with the OTP sent.', user: newUser });
+        res.status(201).json({ 
+            message: 'User registered successfully.', 
+            user: newUser
+        });
     } catch (error) {
         console.error('Error during registration:', error);
         res.status(500).json({ message: 'Error registering user', error: error.message });
@@ -258,29 +262,14 @@ exports.verifyUser = async (req, res) => {
 
 exports.verifyOTP = async (req, res) => {
     try {
-        const { identifier, otp } = req.body;
+        const { otp_id, otp } = req.body;
+        console.log('Request Body:', req.body);
 
-        const user = await User.findOne({
-            where: {
-                [Op.or]: [
-                    { Email: identifier },
-                    { phoneNumber: identifier }
-                ],
-                otp,
-                otpExpiresAt: {
-                    [Op.gt]: new Date()
-                }
-            }
-        });
-
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid OTP or OTP has expired' });
-        }
-
-        user.IsVerified = true;
-        user.otp = null;
-        user.otpExpiresAt = null;
-        await user.save();
+         // Validate OTP using Fazpass
+         const otpResponse = await validateOTP(otp_id, otp);
+         if (!otpResponse.valid) {
+             return res.status(400).json({ message: 'Invalid OTP or OTP has expired' });
+         }
 
         res.status(200).json({ message: 'User verified successfully', user });
     } catch (error) {
@@ -311,47 +300,123 @@ exports.deleteUser = async (req, res) => {
 
 exports.registerSeller = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
-        if (!username || !email || !password) {
-            return res.status(400).json({ message: 'Username, email, and password are required' });
+        const { username, email, phoneNumber, password } = req.body;
+        console.log('Request Body:', req.body);
+
+        // Validasi apakah email atau nomor telepon sudah ada di database
+        const existingUser = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { Email: email },
+                    { phoneNumber: phoneNumber }
+                ]
+            }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email or Phone Number already exists. Please use a different email or phone number.' });
         }
 
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Generate OTP using Fazpass
+        const otpResponse = await generateOTPSMS(phoneNumber);
+        const otp = otpResponse.data.otp;
+        const otp_id = otpResponse.data.id;
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+
+        // Buat pengguna baru
         const newUser = await User.create({
             Username: username,
             Email: email,
+            phoneNumber: phoneNumber,
             PasswordHash: hashedPassword,
             Role: 'seller',
-            IsVerified: false
+            IsVerified: false,
+            otp,
+            otp_id,
+            otpExpiresAt
         });
-        res.status(201).json({ message: 'Seller registered successfully', user: newUser });
+
+        // Simpan OTP di tabel AuditLogs
+        await AuditLog.create({
+            action: 'otp',
+            user_id: newUser.UserID,
+            otp,
+            otp_id,
+            otpExpiresAt
+        });
+
+        // Log audit record for user registration
+        await auditController.logCreateAction(newUser.UserID, email, newUser.secure_id, 'Seller created', otp, otp_id);
+
+        res.status(201).json({ 
+            message: 'Seller registered successfully. Please verify your phone with the OTP sent via WhatsApp.', 
+            user: newUser,
+            otp,
+            otp_id
+        });
     } catch (error) {
+        console.error('Error during seller registration:', error);
         res.status(500).json({ message: 'Error registering seller', error: error.message });
     }
 };
 
-exports.registerAdmin = async (req, res) => {
+exports.resendOTP = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
-        if (!username || !email || !password) {
-            return res.status(400).json({ message: 'Username, email, and password are required' });
+        const { identifier } = req.body;
+
+        // Validasi apakah identifier adalah email atau nomor telepon
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+        const isPhoneNumber = /^(\+62|62|0)8\d{8,12}$/.test(identifier);
+
+        if (!isEmail && !isPhoneNumber) {
+            return res.status(400).json({ message: 'Identifier must be a valid email or phone number' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({
-            Username: username,
-            Email: email,
-            PasswordHash: hashedPassword,
-            Role: 'admin',
-            IsVerified: true
+        // Cari pengguna berdasarkan identifier
+        const user = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { Email: identifier },
+                    { phoneNumber: identifier }
+                ]
+            }
         });
-        res.status(201).json({ message: 'Admin registered successfully', user: newUser });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate OTP using Fazpass
+        let otpResponse;
+        if (isPhoneNumber) {
+            otpResponse = await generateOTPSMS(identifier);
+        } else if (isEmail) {
+            otpResponse = await generateOTPEmail(identifier);
+        } else {
+            otpResponse = { data: { id: null, otp: null } };
+        }
+        const otp = otpResponse.data.otp;
+        const otp_id = otpResponse.data.id;
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+
+        // Simpan OTP di tabel AuditLogs
+        await AuditLog.create({
+            action: 'otp',
+            user_id: user.UserID,
+            otp,
+            otp_id,
+            otpExpiresAt
+        });
+
+        res.status(200).json({ message: 'OTP resent successfully', user, otp, otp_id });
     } catch (error) {
-        res.status(500).json({ message: 'Error registering admin', error: error.message });
+        console.error('Error resending OTP:', error);
+        res.status(500).json({ message: 'Error resending OTP', error: error.message });
     }
 };
-
-
 
 module.exports = {
     register: exports.register,
@@ -364,5 +429,5 @@ module.exports = {
     verifyOTP: exports.verifyOTP,
     deleteUser: exports.deleteUser,
     registerSeller: exports.registerSeller,
-    registerAdmin: exports.registerAdmin
+    resendOTP: exports.resendOTP
 };

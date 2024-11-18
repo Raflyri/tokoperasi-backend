@@ -3,6 +3,7 @@ const sequelize = require('../config/database');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const Session = require('./sessionsModel');
+const AuditLog = require('./auditModel');
 
 const User = sequelize.define('User', {
     UserID: {
@@ -62,17 +63,33 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    deletedAt: {
-        type: DataTypes.DATE,
+    ReferalNum: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    KoperasiName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    MemberNum: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
     otp: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    otp_id: {
         type: DataTypes.STRING,
         allowNull: true,
     },
     otpExpiresAt: {
         type: DataTypes.DATE,
         allowNull: true,
-    }    
+    },
+    deletedAt: {
+        type: DataTypes.DATE,
+    }  
 }, {
     timestamps: true,
     paranoid: true,
@@ -92,5 +109,6 @@ User.beforeCreate(async (user) => {
 
 User.hasMany(Session, { foreignKey: 'UserID' });
 Session.belongsTo(User, { foreignKey: 'UserID' });
+
 
 module.exports = User;
