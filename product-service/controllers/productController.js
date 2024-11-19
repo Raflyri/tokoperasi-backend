@@ -15,7 +15,7 @@ exports.getProducts = async (req, res) => {
 
 // Add a new product with optional images
 exports.addProduct = async (req, res) => {
-    const { ProductName, Description, Price, Stock, CategoryID, SellerID } = req.body;
+    const { ProductName, Description, Price, Stock, CategoryID, SellerID, Specifications, Condition, Preorder, Variations, ShippingInsurance, Weight, Dimensions } = req.body;
     try {
         const newProduct = await Product.create({
             ProductName,
@@ -23,7 +23,14 @@ exports.addProduct = async (req, res) => {
             Price,
             Stock,
             CategoryID,
-            SellerID
+            SellerID,
+            Specifications,
+            Condition,
+            Preorder,
+            Variations,
+            ShippingInsurance,
+            Weight,
+            Dimensions
         });
 
         // If there are images, add them to ProductImages table
@@ -44,7 +51,7 @@ exports.addProduct = async (req, res) => {
 // Update a product
 exports.updateProduct = async (req, res) => {
     const { id } = req.params;
-    const { ProductName, Description, Price, Stock, CategoryID } = req.body;
+    const { ProductName, Description, Price, Stock, CategoryID, Specifications, Condition, Preorder, Variations, ShippingInsurance, Weight, Dimensions } = req.body;
     try {
         const product = await Product.findByPk(id);
         if (!product) {
@@ -56,7 +63,14 @@ exports.updateProduct = async (req, res) => {
             Description,
             Price,
             Stock,
-            CategoryID
+            CategoryID,
+            Specifications,
+            Condition,
+            Preorder,
+            Variations,
+            ShippingInsurance,
+            Weight,
+            Dimensions
         });
 
         // If there are images, update them in ProductImages table
@@ -129,7 +143,20 @@ exports.searchProducts = async (req, res) => {
                 { model: ProductImage, attributes: ['ImageURL'] }
             ]
         });
-        res.json(products);
+
+        // Tambahkan URL gambar ke dalam respons
+        const productsWithImageURLs = products.map(product => {
+            const productImages = product.ProductImages.map(image => ({
+                ...image.toJSON(),
+                ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+            }));
+            return {
+                ...product.toJSON(),
+                ProductImages: productImages
+            };
+        });
+
+        res.json(productsWithImageURLs);
     } catch (error) {
         res.status(500).json({ message: 'Error searching products', error: error.message });
     }

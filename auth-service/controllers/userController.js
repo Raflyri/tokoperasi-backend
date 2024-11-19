@@ -30,7 +30,7 @@ exports.register = async (req, res) => {
         }
 
         // Tentukan jalur gambar profil default
-        const defaultProfilePicture = 'uploads/images/logo_only_white.png';
+        const defaultProfilePicture = 'uploads/images/NoPhoto.jpg';
 
         // Gunakan gambar yang diunggah jika ada, jika tidak gunakan gambar default
         const profilePicture = req.file ? req.file.path : defaultProfilePicture;
@@ -121,6 +121,7 @@ exports.login = async (req, res) => {
             Role: user.Role,
             IsMember: user.IsMember,
             IsVerified: user.IsVerified,
+            profilePictureURL: `${req.protocol}://${req.get('host')}/${user.profilePicture}`, // Tambahkan URL gambar profil
             Token: token
         });
     } catch (error) {
@@ -137,30 +138,53 @@ exports.updateUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { username, email, gender, birthdate, isMember } = req.body;
-
-        console.log('Before Update:', user.toJSON());
-
+        const { username, email, phoneNumber, password, ReferalNum, KoperasiName, MemberNum, isMember, isVerified } = req.body;
         const updatedFields = {};
-        if (username && username !== user.Username) {
+
+        if (username !== undefined && username !== user.Username) {
             updatedFields.Username = { before: user.Username, after: username };
             user.Username = username;
         }
-        if (email && email !== user.Email) {
+
+        if (email !== undefined && email !== user.Email) {
             updatedFields.Email = { before: user.Email, after: email };
             user.Email = email;
         }
-        if (gender && gender !== user.Gender) {
-            updatedFields.Gender = { before: user.Gender, after: gender };
-            user.Gender = gender;
+
+        if (phoneNumber !== undefined && phoneNumber !== user.phoneNumber) {
+            updatedFields.phoneNumber = { before: user.phoneNumber, after: phoneNumber };
+            user.phoneNumber = phoneNumber;
         }
-        if (birthdate && birthdate !== user.Birthdate) {
-            updatedFields.Birthdate = { before: user.Birthdate, after: birthdate };
-            user.Birthdate = birthdate;
+
+        if (password !== undefined) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updatedFields.PasswordHash = { before: user.PasswordHash, after: hashedPassword };
+            user.PasswordHash = hashedPassword;
         }
+
+        if (ReferalNum !== undefined && ReferalNum !== user.ReferalNum) {
+            updatedFields.ReferalNum = { before: user.ReferalNum, after: ReferalNum };
+            user.ReferalNum = ReferalNum;
+        }
+
+        if (KoperasiName !== undefined && KoperasiName !== user.KoperasiName) {
+            updatedFields.KoperasiName = { before: user.KoperasiName, after: KoperasiName };
+            user.KoperasiName = KoperasiName;
+        }
+
+        if (MemberNum !== undefined && MemberNum !== user.MemberNum) {
+            updatedFields.MemberNum = { before: user.MemberNum, after: MemberNum };
+            user.MemberNum = MemberNum;
+        }
+
         if (isMember !== undefined && isMember !== user.IsMember) {
             updatedFields.IsMember = { before: user.IsMember, after: isMember };
             user.IsMember = isMember;
+        }
+
+        if (isVerified !== undefined && isVerified !== user.IsVerified) {
+            updatedFields.IsVerified = { before: user.IsVerified, after: isVerified };
+            user.IsVerified = isVerified;
         }
 
         if (req.file) {
