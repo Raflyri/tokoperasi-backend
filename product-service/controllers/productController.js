@@ -115,8 +115,8 @@ exports.searchProducts = async (req, res) => {
     // Search by product name or description
     if (query) {
         whereClause[Op.or] = [
-            { ProductName: { [Op.like]: `%${query}%` } },
-            { Description: { [Op.like]: `%${query}%` } }
+            { ProductName: { [Op.like]: `%{query}%` } },
+            { Description: { [Op.like]: `%{query}%` } }
         ];
     }
 
@@ -159,5 +159,37 @@ exports.searchProducts = async (req, res) => {
         res.json(productsWithImageURLs);
     } catch (error) {
         res.status(500).json({ message: 'Error searching products', error: error.message });
+    }
+};
+
+// Search for products by category
+exports.searchProductsByCategory = async (req, res) => {
+    const { categoryID } = req.params;
+
+    try {
+        // Execute search with category filter and include category and images
+        const products = await Product.findAll({
+            where: { CategoryID: categoryID },
+            include: [
+                { model: Category, attributes: ['CategoryName'] },
+                { model: ProductImage, attributes: ['ImageURL'] }
+            ]
+        });
+
+        // Tambahkan URL gambar ke dalam respons
+        const productsWithImageURLs = products.map(product => {
+            const productImages = product.ProductImages.map(image => ({
+                ...image.toJSON(),
+                ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+            }));
+            return {
+                ...product.toJSON(),
+                ProductImages: productImages
+            };
+        });
+
+        res.json(productsWithImageURLs);
+    } catch (error) {
+        res.status(500).json({ message: 'Error searching products by category', error: error.message });
     }
 };

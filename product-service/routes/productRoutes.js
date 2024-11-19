@@ -4,7 +4,7 @@ const productController = require('../controllers/productController');
 const multer = require('multer');
 const path = require('path');
 
-const { getProducts, addProduct, updateProduct, deleteProduct } = require('../controllers/productController');
+const { getProducts, addProduct, updateProduct, deleteProduct, searchProductsByCategory } = require('../controllers/productController');
 
 // Konfigurasi penyimpanan file
 const storage = multer.diskStorage({
@@ -46,6 +46,9 @@ router.put('/:id', upload.array('images', 5), updateProduct); // Menggunakan upl
 
 // Delete a product
 router.delete('/:id', deleteProduct);
+
+// Search products by category
+router.get('/category/:categoryID', searchProductsByCategory);
 
 router.get('/search', productController.searchProducts);
 
