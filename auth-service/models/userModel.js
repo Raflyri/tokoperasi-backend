@@ -75,6 +75,26 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    storeDescription: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    storePhoto: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    nibNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    nibPhoto: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    storeAddress: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
     otp: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -110,5 +130,8 @@ User.beforeCreate(async (user) => {
 User.hasMany(Session, { foreignKey: 'UserID' });
 Session.belongsTo(User, { foreignKey: 'UserID' });
 
+// Definisikan asosiasi dengan AuditLog
+User.hasMany(AuditLog, { foreignKey: 'user_id' });
+AuditLog.belongsTo(User, { foreignKey: 'user_id' });
 
 module.exports = User;

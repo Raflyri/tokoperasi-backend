@@ -115,8 +115,8 @@ exports.searchProducts = async (req, res) => {
     // Search by product name or description
     if (query) {
         whereClause[Op.or] = [
-            { ProductName: { [Op.like]: `%{query}%` } },
-            { Description: { [Op.like]: `%{query}%` } }
+            { ProductName: { [Op.like]: `%${query}%` } },
+            { Description: { [Op.like]: `%${query}%` } }
         ];
     }
 
