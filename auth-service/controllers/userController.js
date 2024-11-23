@@ -248,11 +248,19 @@ exports.getAllUsers = async (req, res) => {
 
         const filterConditions = {};
         if (role) filterConditions.Role = role;
+        if (id) filterConditions.UserID = id;
+        if (username) filterConditions.Username = { [Op.like]: `%${username}%` };
         if (isVerified !== undefined) filterConditions.IsVerified = isVerified === 'true';
         if (isMember !== undefined) filterConditions.IsMember = isMember === 'true';
 
         const users = await User.findAll({ where: filterConditions });
-        res.json(users);
+
+        const usersWithProfilePictureURL = users.map(user => ({
+            ...user.toJSON(),
+            profilePictureURL: `${req.protocol}://${req.get('host')}/${user.profilePicture}`
+        }));
+
+        res.status(200).json(usersWithProfilePictureURL);
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ message: 'Error fetching users', error: error.message });
