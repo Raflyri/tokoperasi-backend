@@ -13,3 +13,6 @@ Request: {"username":"BapakBapak","email":"BapakBapak3@domain.com","gender":"mal
 Time: 2024-11-11T17:23:14.808Z
 Request: {"username":"seller_rb44","email":"seller_rb44@example.com","gender":"male","birthdate":"1996-02-10","isMember":"false","IsVerified":"false"}
 
+Time: 2024-11-23T15:18:02.714Z
+Request: {"username":"Test User Lagi","email":"test_user60@example.com","gender":"male","birthdate":"1998-11-18","phoneNumber":"0812345672233","password":"password123"}
+

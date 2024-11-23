@@ -7,6 +7,12 @@ exports.createCart = async (req, res) => {
         console.log(`User with ID ${UserID} is creating a cart`);
         console.log(req.body);
 
+        // Check if the user already has a cart
+        const existingCart = await Cart.findOne({ where: { UserID } });
+        if (existingCart) {
+            return res.status(400).json({ message: 'User already has a cart' });
+        }
+
         const newCart = await Cart.create({ UserID });
         console.log(`Cart created with ID ${newCart.CartID}`);
 

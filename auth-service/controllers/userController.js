@@ -1,5 +1,7 @@
 const { Sequelize } = require('sequelize');
 const User = require('../models/userModel');
+const Identity = require('../models/identityModel');
+const BankAccount = require('../models/bankAccountModel');
 const AuditLog = require('../models/auditModel');
 const Session = require('../models/sessionsModel');
 const auditController = require('./auditController');
@@ -9,10 +11,11 @@ const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
 const { generateOTPSMS, generateOTPEmail, validateOTP } = require('../utils/otp');
+const axios = require('axios');
 
 exports.register = async (req, res) => {
     try {
-        const { username, email, phoneNumber, password, ReferalNum, KoperasiName, MemberNum } = req.body;
+        const { username, email, phoneNumber, password, ReferalNum, KoperasiName, MemberNum, storeDescription, storePhoto, nibNumber, nibPhoto, storeAddress } = req.body;
         console.log('Request Body:', req.body);
 
         // Validasi apakah email atau nomor telepon sudah ada di database
@@ -49,7 +52,12 @@ exports.register = async (req, res) => {
             ReferalNum: ReferalNum || null,
             KoperasiName: KoperasiName || null,
             MemberNum: MemberNum || null,
-            profilePicture
+            profilePicture,
+            storeDescription,
+            storePhoto,
+            nibNumber,
+            nibPhoto,
+            storeAddress
         });
 
         // Log audit record for user registration
@@ -89,7 +97,7 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Password yang dimasukkan salah' });
         }
 
-        //Token Expired for 1 Month
+        //Token Expired 1 Month
         const token = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '30d' });
         const expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
 
@@ -109,6 +117,18 @@ exports.login = async (req, res) => {
             'Token:', token, 
             'ExpUntill:', expiresAt
         );
+
+        // Panggil API endpoint untuk membuat keranjang
+        try {
+            const cartResponse = await axios.post('http://147.139.246.88:6000/api/cart/create', {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            console.log('Cart created successfully:', cartResponse.data);
+        } catch (cartError) {
+            console.error('Error creating cart:', cartError.response ? cartError.response.data : cartError.message);
+        }
 
         // Menampilkan informasi yang diinginkan dalam respon
         res.status(200).json({

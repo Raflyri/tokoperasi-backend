@@ -24,6 +24,7 @@
     "nodemailer": "^6.9.16",
     "sequelize": "^6.37.4",
     "sequelize-cli": "^6.6.2",
+    "sharp": "^0.33.5",
     "twilio": "^5.3.5"
   },
   "devDependencies": {

@@ -14,6 +14,8 @@ const authenticate = async (req, res, next) => {
             return res.status(401).json({ message: 'Session expired or not valid' });
         }
 
+        console.log('User authenticated:', session.UserID);
+
         req.user = decoded;
         next();
     } catch (error) {

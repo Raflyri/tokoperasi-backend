@@ -107,7 +107,7 @@ exports.deleteProduct = async (req, res) => {
 
 // Search for products based on various criteria
 exports.searchProducts = async (req, res) => {
-    const { query, categoryID, minPrice, maxPrice } = req.query;
+    const { query, categoryID, ProductID, SellerID, minPrice, maxPrice } = req.query;
 
     // Build the where clause based on available filters
     const whereClause = {};
@@ -123,6 +123,16 @@ exports.searchProducts = async (req, res) => {
     // Filter by category
     if (categoryID) {
         whereClause.CategoryID = categoryID;
+    }
+
+    // Filter by ID Product
+    if (ProductID) {
+        whereClause.ProductID = ProductID;
+    }
+
+    // Filter by ID Seller
+    if (SellerID) {
+        whereClause.SellerID = SellerID;
     }
 
     // Filter by price range
