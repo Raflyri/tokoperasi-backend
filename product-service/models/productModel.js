@@ -48,34 +48,10 @@ const Product = sequelize.define('Product', {
             key: 'CategoryID'
         }
     },
-    Specifications: {
-        type: DataTypes.TEXT,
-        allowNull: true
-    },
-    Condition: {
-        type: DataTypes.ENUM('new', 'used'),
-        allowNull: false
-    },
-    Preorder: {
-        type: DataTypes.ENUM('yes', 'no'),
-        allowNull: false
-    },
-    Variations: {
-        type: DataTypes.JSON,
-        allowNull: true
-    },
-    ShippingInsurance: {
+    isSpecial: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false
-    },
-    Weight: {
-        type: DataTypes.FLOAT,
-        allowNull: false
-    },
-    Dimensions: {
-        type: DataTypes.STRING,
-        allowNull: true
     }
 }, {
     timestamps: true,

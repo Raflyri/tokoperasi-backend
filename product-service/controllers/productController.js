@@ -51,7 +51,7 @@ exports.addProduct = async (req, res) => {
 // Update a product
 exports.updateProduct = async (req, res) => {
     const { id } = req.params;
-    const { ProductName, Description, Price, Stock, CategoryID, Specifications, Condition, Preorder, Variations, ShippingInsurance, Weight, Dimensions } = req.body;
+    const { ProductName, Description, Price, Stock, CategoryID, Specifications, Condition, Preorder, Variations, ShippingInsurance, Weight, Dimensions, isSpecial } = req.body;
     try {
         const product = await Product.findByPk(id);
         if (!product) {
@@ -70,7 +70,8 @@ exports.updateProduct = async (req, res) => {
             Variations,
             ShippingInsurance,
             Weight,
-            Dimensions
+            Dimensions,
+            isSpecial // Tambahkan field isSpecial
         });
 
         // If there are images, update them in ProductImages table

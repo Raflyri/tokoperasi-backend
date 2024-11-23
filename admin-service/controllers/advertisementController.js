@@ -4,7 +4,16 @@ const Advertisement = require('../models/advertisementModel');
 exports.getAdvertisements = async (req, res) => {
     try {
         const ads = await Advertisement.findAll();
-        res.json(ads);
+
+        // Tambahkan URL gambar ke dalam respons
+        const adsWithImageURLs = ads.map(ad => {
+            return {
+                ...ad.toJSON(),
+                ImageURL: ad.ImageURL ? `${req.protocol}://${req.get('host')}/${ad.ImageURL}` : null
+            };
+        });
+
+        res.json(adsWithImageURLs);
     } catch (error) {
         console.error('Error fetching advertisements:', error);
         res.status(500).json({ message: 'Error fetching advertisements', error: error.message });
@@ -29,7 +38,8 @@ exports.getAdvertisementById = async (req, res) => {
 // Create a new advertisement
 exports.addAdvertisement = async (req, res) => {
     try {
-        const { Title, ImageURL, ExpiresAt } = req.body;
+        const { Title, ExpiresAt } = req.body;
+        const ImageURL = req.file ? req.file.path : null; // Assuming you're using multer for file uploads
         const newAd = await Advertisement.create({ Title, ImageURL, ExpiresAt });
         res.status(201).json(newAd);
     } catch (error) {
@@ -42,7 +52,8 @@ exports.addAdvertisement = async (req, res) => {
 exports.updateAdvertisement = async (req, res) => {
     try {
         const { id } = req.params;
-        const { Title, ImageURL, ExpiresAt } = req.body;
+        const { Title, ExpiresAt } = req.body;
+        const ImageURL = req.file ? req.file.path : null;
         const ad = await Advertisement.findByPk(id);
         if (!ad) {
             return res.status(404).json({ message: 'Advertisement not found' });
