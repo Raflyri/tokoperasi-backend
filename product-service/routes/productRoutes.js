@@ -35,9 +35,6 @@ const upload = multer({
     limits: { fileSize: 1024 * 1024 * 5 } // Batas ukuran file 5MB
 });
 
-// Middleware untuk melayani file statis di direktori uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 // Get all products
 router.get('/', getProducts);
 
