@@ -108,7 +108,7 @@ exports.deleteProduct = async (req, res) => {
 
 // Search for products based on various criteria
 exports.searchProducts = async (req, res) => {
-    const { query, categoryID, ProductID, SellerID, minPrice, maxPrice } = req.query;
+    const { query, categoryID, ProductID, SellerID, minPrice, maxPrice, isSpecial } = req.query;
 
     // Build the where clause based on available filters
     const whereClause = {};
@@ -143,6 +143,11 @@ exports.searchProducts = async (req, res) => {
         whereClause.Price = { [Op.gte]: minPrice };
     } else if (maxPrice) {
         whereClause.Price = { [Op.lte]: maxPrice };
+    }
+
+    // Filter by isSpecial
+    if (isSpecial !== undefined) {
+        whereClause.isSpecial = isSpecial === 'true';
     }
 
     try {
