@@ -35,6 +35,26 @@ const UserAddress = sequelize.define('UserAddress', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    LabelAddress: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    RecipientName: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    RecipientPhone: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    Latitude: {
+        type: DataTypes.FLOAT,
+        allowNull: true
+    },
+    Longitude: {
+        type: DataTypes.FLOAT,
+        allowNull: true
+    },
     CreatedAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
