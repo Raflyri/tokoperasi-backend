@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database'); // Ensure this line is correct
 
 const Category = sequelize.define('Category', {
     CategoryID: {
@@ -23,7 +23,11 @@ const Product = sequelize.define('Product', {
     },
     SellerID: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: 'Users', // Use the table name as a string
+            key: 'UserID'
+        }
     },
     ProductName: {
         type: DataTypes.STRING,

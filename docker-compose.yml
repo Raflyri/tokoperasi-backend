@@ -1,6 +1,9 @@
 services:
   auth-service:
-    build: ./auth-service
+    image: auth-service
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
     ports:
       - "4000:4000"
     volumes:
@@ -12,7 +15,10 @@ services:
     restart: always
 
   product-service:
-    build: ./product-service
+    image: product-service
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     volumes:
@@ -24,8 +30,10 @@ services:
     restart: always
 
   cart-service:
+    image: cart-service
     build:
       context: ./cart-service
+      dockerfile: Dockerfile
     ports:
       - "6000:6000"
     volumes:
@@ -37,7 +45,10 @@ services:
     restart: always
 
   address-service:
-    build: ./address-service
+    image: address-service
+    build:
+      context: ./address-service
+      dockerfile: Dockerfile
     ports:
       - "7000:7000"
     volumes:
@@ -49,7 +60,10 @@ services:
     restart: always
 
   admin-service:
-    build: ./admin-service
+    image: admin-service
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -61,8 +75,10 @@ services:
     restart: always
 
   order-service:
+    image: order-service
     build:
       context: ./order-service
+      dockerfile: Dockerfile
     ports:
       - "9000:9000"
     volumes:
@@ -76,7 +92,10 @@ services:
       - CART_SERVICE_URL=http://cart-service:6000
 
   payment-service:
-    build: ./payment-service
+    image: payment-service
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
     ports:
       - "10000:10000"
     volumes:
@@ -88,7 +107,10 @@ services:
     restart: always
 
   shipping-service:
-    build: ./shipping-service
+    image: shipping-service
+    build:
+      context: ./shipping-service
+      dockerfile: Dockerfile
     ports:
       - "11000:11000"
     volumes:
@@ -100,7 +122,10 @@ services:
     restart: always
 
   api-gateway:
-    build: ./api-gateway
+    image: api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
@@ -117,6 +142,15 @@ services:
       - admin-service
       - address-service
     restart: always
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:4000
+      - PRODUCT_SERVICE_URL=http://product-service:5000
+      - ORDER_SERVICE_URL=http://order-service:9000
+      - CART_SERVICE_URL=http://cart-service:6000
+      - PAYMENT_SERVICE_URL=http://payment-service:10000
+      - SHIPPING_SERVICE_URL=http://shipping-service:11000
+      - ADMIN_SERVICE_URL=http://admin-service:8000
+      - ADDRESS_SERVICE_URL=http://address-service:7000
 
   db:
     image: mysql:5.7
@@ -126,6 +160,8 @@ services:
     ports:
       - "3306:3306"
     restart: always
+    networks:
+      - tokoperasi-network
 
 networks:
   tokoperasi-network:

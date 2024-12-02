@@ -3,9 +3,71 @@ const axios = require('axios');
 // Logika untuk mengarahkan request login ke auth-service
 exports.login = async (req, res) => {
   try {
-    const response = await axios.post('http://auth-service:4000/login', req.body);
+    const response = await axios.post(`${process.env.AUTH_SERVICE_URL}/api/auth/login`, req.body);
+    console.log('Login request successful:', response.data);
     res.status(response.status).send(response.data);
   } catch (error) {
+    console.error('Error connecting to auth-service for login:', error.message);
+    res.status(500).send('Error connecting to auth-service');
+  }
+};
+
+// Logika untuk mengarahkan request register ke auth-service
+exports.register = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.AUTH_SERVICE_URL}/api/auth/register`, req.body);
+    console.log('Register request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to auth-service for register:', error.message);
+    res.status(500).send('Error connecting to auth-service');
+  }
+};
+
+// Logika untuk mengarahkan request logout ke auth-service
+exports.logout = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.AUTH_SERVICE_URL}/api/auth/logout`, req.body);
+    console.log('Logout request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to auth-service for logout:', error.message);
+    res.status(500).send('Error connecting to auth-service');
+  }
+};
+
+// Logika untuk mengarahkan request update user ke auth-service
+exports.updateUser = async (req, res) => {
+  try {
+    const response = await axios.put(`${process.env.AUTH_SERVICE_URL}/api/auth/update/${req.params.id}`, req.body);
+    console.log('Update user request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to auth-service for update user:', error.message);
+    res.status(500).send('Error connecting to auth-service');
+  }
+};
+
+// Logika untuk mengarahkan request user details ke auth-service
+exports.getUserDetails = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${req.params.id}`);
+    console.log('Get user details request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to auth-service for get user details:', error.message);
+    res.status(500).send('Error connecting to auth-service');
+  }
+};
+
+// Logika untuk mengarahkan request user ke auth-service
+exports.getUser = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.AUTH_SERVICE_URL}/users/${req.params.id}`);
+    console.log('Get user request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to auth-service for get user:', error.message);
     res.status(500).send('Error connecting to auth-service');
   }
 };
@@ -13,9 +75,341 @@ exports.login = async (req, res) => {
 // Logika untuk mengarahkan request produk ke product-service
 exports.getProducts = async (req, res) => {
   try {
-    const response = await axios.get('http://product-service:5000/products');
+    const response = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products`);
+    console.log('Get products request successful:', response.data);
     res.status(response.status).send(response.data);
   } catch (error) {
+    console.error('Error connecting to product-service for get products:', error.message);
     res.status(500).send('Error connecting to product-service');
+  }
+};
+
+// Logika untuk mengarahkan request produk by ID ke product-service
+exports.getProductById = async (req, res) => {
+  console.log('Get product by ID request received:', req.params);
+  try {
+    const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/${req.params.id}`);
+    const productData = productResponse.data;
+
+    if (!productData) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    console.log('Product data:', productData);
+
+    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${productData.SellerID}`);
+    const sellerData = sellerResponse.data;
+
+    if (!sellerData) {
+      return res.status(404).json({ message: 'Seller not found' });
+    }
+
+    console.log('Seller data:', sellerData);
+
+    const combinedData = {
+      ...productData,
+      seller: sellerData
+    };
+
+    console.log('Get product by ID request successful:', combinedData);
+    res.status(productResponse.status).json(combinedData);
+  } catch (error) {
+    console.error('Error connecting to services for get product by ID:', error.message);
+    console.error('Error details:', error.response ? error.response.data : 'No response data');
+    res.status(500).send('Error connecting to services');
+  }
+};
+
+// Logika untuk mengarahkan request produk dan detail seller ke product-service dan auth-service
+exports.getProductAndSellerDetails = async (req, res) => {
+  try {
+    const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/${req.params.id}`);
+    const productData = productResponse.data;
+
+    if (!productData) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${productData.sellerId}`);
+    const sellerData = sellerResponse.data;
+
+    if (!sellerData) {
+      return res.status(404).json({ message: 'Seller not found' });
+    }
+
+    const combinedData = {
+      ...productData,
+      seller: sellerData
+    };
+
+    res.status(200).json(combinedData);
+  } catch (error) {
+    console.error('Error fetching product or seller details:', error.message);
+    res.status(500).send('Error fetching product or seller details');
+  }
+};
+
+// Logika untuk mengarahkan request search produk ke product-service
+exports.searchProducts = async (req, res) => {
+  console.log('Search products request received:', req.query);
+
+  try {
+    const response = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/search`, { params: req.query });
+    const products = response.data;
+    console.log('Search products response from product-service:', products);
+
+    const productsWithSellerDetails = await Promise.all(products.map(async (product) => {
+      console.log('Processing product:', product);
+      if (!product.sellerId) {
+        console.error(`Product ${product.id} does not have a sellerId`);
+        return product;
+      }
+
+      try {
+        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${product.sellerId}`);
+        console.log('Get seller details response from auth-service:', sellerResponse.data);
+        return {
+          ...product,
+          seller: sellerResponse.data
+        };
+      } catch (error) {
+        console.error(`Error fetching seller details for product ${product.id}:`, error.message);
+        return product;
+      }
+    }));
+
+    console.log('Final search products response:', productsWithSellerDetails);
+    res.status(response.status).send(productsWithSellerDetails);
+  } catch (error) {
+    console.error('Error connecting to product-service for search products:', error.message);
+    res.status(500).send('Error connecting to product-service');
+  }
+};
+
+// Logika untuk mengarahkan request produk by category ke product-service
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/category/${req.params.categoryID}`);
+    console.log('Get products by category request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to product-service for get products by category:', error.message);
+    res.status(500).send('Error connecting to product-service');
+  }
+};
+
+// Logika untuk mengarahkan request users dengan query parameters ke auth-service
+exports.getUsers = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/users`, { params: req.query });
+    console.log('Get users request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to auth-service for get users:', error.message);
+    res.status(500).send('Error connecting to auth-service');
+  }
+};
+
+// Logika untuk mengarahkan request cart ke cart-service
+exports.getCart = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.CART_SERVICE_URL}/cart`);
+    console.log('Get cart request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to cart-service for get cart:', error.message);
+    res.status(500).send('Error connecting to cart-service');
+  }
+};
+
+exports.addToCart = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.CART_SERVICE_URL}/cart`, req.body);
+    console.log('Add to cart request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to cart-service for add to cart:', error.message);
+    res.status(500).send('Error connecting to cart-service');
+  }
+};
+
+exports.removeFromCart = async (req, res) => {
+  try {
+    const response = await axios.delete(`${process.env.CART_SERVICE_URL}/cart/${req.params.id}`);
+    console.log('Remove from cart request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to cart-service for remove from cart:', error.message);
+    res.status(500).send('Error connecting to cart-service');
+  }
+};
+
+// Logika untuk mengarahkan request orders ke order-service
+exports.getOrders = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ORDER_SERVICE_URL}/orders`);
+    console.log('Get orders request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to order-service for get orders:', error.message);
+    res.status(500).send('Error connecting to order-service');
+  }
+};
+
+exports.createOrder = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.ORDER_SERVICE_URL}/orders`, req.body);
+    console.log('Create order request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to order-service for create order:', error.message);
+    res.status(500).send('Error connecting to order-service');
+  }
+};
+
+exports.getOrderById = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ORDER_SERVICE_URL}/orders/${req.params.id}`);
+    console.log('Get order by ID request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to order-service for get order by ID:', error.message);
+    res.status(500).send('Error connecting to order-service');
+  }
+};
+
+// Logika untuk mengarahkan request payments ke payment-service
+exports.getPayments = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.PAYMENT_SERVICE_URL}/payments`);
+    console.log('Get payments request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to payment-service for get payments:', error.message);
+    res.status(500).send('Error connecting to payment-service');
+  }
+};
+
+exports.createPayment = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.PAYMENT_SERVICE_URL}/payments`, req.body);
+    console.log('Create payment request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to payment-service for create payment:', error.message);
+    res.status(500).send('Error connecting to payment-service');
+  }
+};
+
+exports.getPaymentById = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.PAYMENT_SERVICE_URL}/payments/${req.params.id}`);
+    console.log('Get payment by ID request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to payment-service for get payment by ID:', error.message);
+    res.status(500).send('Error connecting to payment-service');
+  }
+};
+
+// Logika untuk mengarahkan request shipping ke shipping-service
+exports.getShipping = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.SHIPPING_SERVICE_URL}/shipping`);
+    console.log('Get shipping request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to shipping-service for get shipping:', error.message);
+    res.status(500).send('Error connecting to shipping-service');
+  }
+};
+
+exports.createShipping = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.SHIPPING_SERVICE_URL}/shipping`, req.body);
+    console.log('Create shipping request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to shipping-service for create shipping:', error.message);
+    res.status(500).send('Error connecting to shipping-service');
+  }
+};
+
+exports.getShippingById = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.SHIPPING_SERVICE_URL}/shipping/${req.params.id}`);
+    console.log('Get shipping by ID request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to shipping-service for get shipping by ID:', error.message);
+    res.status(500).send('Error connecting to shipping-service');
+  }
+};
+
+// Logika untuk mengarahkan request admin ke admin-service
+exports.getAdmin = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ADMIN_SERVICE_URL}/admin`);
+    console.log('Get admin request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to admin-service for get admin:', error.message);
+    res.status(500).send('Error connecting to admin-service');
+  }
+};
+
+exports.createAdmin = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.ADMIN_SERVICE_URL}/admin`, req.body);
+    console.log('Create admin request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to admin-service for create admin:', error.message);
+    res.status(500).send('Error connecting to admin-service');
+  }
+};
+
+exports.getAdminById = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ADMIN_SERVICE_URL}/admin/${req.params.id}`);
+    console.log('Get admin by ID request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to admin-service for get admin by ID:', error.message);
+    res.status(500).send('Error connecting to admin-service');
+  }
+};
+
+// Logika untuk mengarahkan request addresses ke address-service
+exports.getAddresses = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ADDRESS_SERVICE_URL}/addresses`);
+    console.log('Get addresses request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to address-service for get addresses:', error.message);
+    res.status(500).send('Error connecting to address-service');
+  }
+};
+
+exports.createAddress = async (req, res) => {
+  try {
+    const response = await axios.post(`${process.env.ADDRESS_SERVICE_URL}/addresses`, req.body);
+    console.log('Create address request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to address-service for create address:', error.message);
+    res.status(500).send('Error connecting to address-service');
+  }
+};
+
+exports.getAddressById = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ADDRESS_SERVICE_URL}/addresses/${req.params.id}`);
+    console.log('Get address by ID request successful:', response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error('Error connecting to address-service for get address by ID:', error.message);
+    res.status(500).send('Error connecting to address-service');
   }
 };

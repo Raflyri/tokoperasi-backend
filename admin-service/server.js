@@ -18,6 +18,10 @@ app.use('/admin', adminRoutes);
 app.use('/advertisements', advertisementRoutes);
 app.use('/reports', reportRoutes);
 
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'API Endpoint Admin' });
+});
+
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
     console.log(`Admin Service berjalan di port ${PORT}`);

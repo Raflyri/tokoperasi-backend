@@ -7,6 +7,10 @@ const app = express();
 app.use(bodyParser.json());
 app.use('/addresses', addressRoutes);
 
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'API Endpoint Address' });
+});
+
 const PORT = process.env.PORT || 7000;
 app.listen(PORT, () => {
     console.log(`Address Service berjalan di port ${PORT}`);

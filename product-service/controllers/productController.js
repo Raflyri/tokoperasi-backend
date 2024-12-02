@@ -1,13 +1,39 @@
 const { Product, Category, ProductImage } = require('../models/productModel');
 const { Op } = require('sequelize');
 
-// Get all products
+// Get all products with optional filtering by SellerID or ProductID
 exports.getProducts = async (req, res) => {
+    const { SellerID, ProductID } = req.query;
+    const whereClause = {};
+
+    if (SellerID) {
+        whereClause.SellerID = SellerID;
+    }
+
+    if (ProductID) {
+        whereClause.ProductID = ProductID;
+    }
+
     try {
         const products = await Product.findAll({
-            include: [Category, ProductImage]
+            where: whereClause,
+            include: [
+                { model: Category, attributes: ['CategoryName'] },
+                { model: ProductImage, attributes: ['ImageURL'] }
+            ]
         });
-        res.json(products);
+        // Add image URLs to the response
+        const productsWithImageURLs = products.map(product => {
+            const productImages = product.ProductImages.map(image => ({
+                ...image.toJSON(),
+                ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+            }));
+            return {
+                ...product.toJSON(),
+                ProductImages: productImages
+            };
+        });
+        res.json(productsWithImageURLs);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching products', error: error.message });
     }
@@ -151,7 +177,7 @@ exports.searchProducts = async (req, res) => {
     }
 
     try {
-        // Execute search with filters and include category and images
+        // Execute search with filters and include category, images, and user details
         const products = await Product.findAll({
             where: whereClause,
             include: [
@@ -207,5 +233,36 @@ exports.searchProductsByCategory = async (req, res) => {
         res.json(productsWithImageURLs);
     } catch (error) {
         res.status(500).json({ message: 'Error searching products by category', error: error.message });
+    }
+};
+
+// Get product details by ID
+exports.getProductDetails = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const product = await Product.findByPk(id, {
+            include: [
+                { model: Category, attributes: ['CategoryName'] },
+                { model: ProductImage, attributes: ['ImageURL'] }
+            ]
+        });
+
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        const productImages = product.ProductImages.map(image => ({
+            ...image.toJSON(),
+            ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+        }));
+
+        const productDetails = {
+            ...product.toJSON(),
+            ProductImages: productImages
+        };
+
+        res.json(productDetails);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching product details', error: error.message });
     }
 };

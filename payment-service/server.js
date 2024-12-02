@@ -7,6 +7,10 @@ const app = express();
 app.use(bodyParser.json());
 app.use('/payments', paymentRoutes);
 
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'API Endpoint Payment' });
+});
+
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Payment Service berjalan di port ${PORT}`);

@@ -10,6 +10,10 @@ const app = express();
 app.use(express.json());
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'API Endpoint Authentication' });
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);

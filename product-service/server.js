@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const sequelize = require('./config/database');
+const { sequelize } = require('./config/database');
 const path = require('path');
 
 const app = express();
@@ -14,7 +14,13 @@ app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/products', productRoutes);
+app.get('/products/:id', productRoutes); // Add this line
+
 app.use('/categories', categoryRoutes);
+
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'API Endpoint Product' });
+});
 
 const PORT = process.env.PORT || 5000;
 sequelize.sync().then(() => {
@@ -22,3 +28,4 @@ sequelize.sync().then(() => {
         console.log(`Product Service berjalan di port ${PORT}`);
     });
 });
+

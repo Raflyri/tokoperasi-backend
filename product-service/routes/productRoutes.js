@@ -4,7 +4,7 @@ const productController = require('../controllers/productController');
 const multer = require('multer');
 const path = require('path');
 
-const { getProducts, addProduct, updateProduct, deleteProduct, searchProductsByCategory } = require('../controllers/productController');
+const { getProducts, addProduct, updateProduct, deleteProduct, searchProductsByCategory, searchProducts, getProductDetails } = require('../controllers/productController'); // Ensure getProductDetails is imported
 
 // Konfigurasi penyimpanan file
 const storage = multer.diskStorage({
@@ -50,6 +50,10 @@ router.delete('/:id', deleteProduct);
 // Search products by category
 router.get('/category/:categoryID', searchProductsByCategory);
 
-router.get('/search', productController.searchProducts);
+router.get('/search', searchProducts); // Ensure searchProducts is used correctly
+
+router.get('/:id/details', getProductDetails); // Ensure this line exists
+
+router.get('/:id', getProductDetails); // Add this line
 
 module.exports = router;
