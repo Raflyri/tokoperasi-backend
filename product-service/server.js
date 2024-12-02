@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -9,6 +10,18 @@ const app = express();
 
 app.use(express.json());
 app.use(bodyParser.json());
+
+// Konfigurasi CORS
+app.use(cors({
+    origin: '*', // Izinkan semua domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Rute lainnya
+app.get('/api', (req, res) => {
+    res.send('CORS bekerja!');
+});
 
 // Middleware untuk melayani file statis di direktori uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

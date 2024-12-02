@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const adminRoutes = require('./routes/adminRoutes');
 const advertisementRoutes = require('./routes/advertisementRoutes');
@@ -11,6 +12,18 @@ const app = express();
 
 app.use(express.json());
 app.use(bodyParser.json());
+
+// Konfigurasi CORS
+app.use(cors({
+    origin: '*', // Izinkan semua domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Rute lainnya
+app.get('/api', (req, res) => {
+    res.send('CORS bekerja!');
+});
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

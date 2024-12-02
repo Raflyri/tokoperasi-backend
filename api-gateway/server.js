@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const proxy = require('express-http-proxy');
 const morgan = require('morgan'); // Tambahkan morgan untuk logging
 const axios = require('axios'); // Tambahkan axios untuk melakukan request HTTP
@@ -24,6 +25,18 @@ const proxyOptions = {
     },
     timeout: 5000  // Set timeout to 5 seconds
 };
+
+// Konfigurasi CORS
+app.use(cors({
+    origin: '*', // Izinkan semua domain
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Rute lainnya
+app.get('/api', (req, res) => {
+    res.send('CORS bekerja!');
+});
 
 // Proxy ke Authentication Service
 app.use('/auth', proxy(process.env.AUTH_SERVICE_URL, proxyOptions));
