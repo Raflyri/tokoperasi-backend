@@ -65,7 +65,10 @@ exports.register = async (req, res) => {
 
         res.status(201).json({ 
             message: 'User registered successfully.', 
-            user: newUser
+            user: {
+                ...newUser.toJSON(),
+                profilePictureURL: `http://147.139.246.88:4000/${newUser.profilePicture}`
+            }
         });
     } catch (error) {
         console.error('Error during registration:', error);
@@ -141,7 +144,7 @@ exports.login = async (req, res) => {
             Role: user.Role,
             IsMember: user.IsMember,
             IsVerified: user.IsVerified,
-            profilePictureURL: `${req.protocol}://${req.get('host')}/${user.profilePicture}`, // Tambahkan URL gambar profil
+            profilePictureURL: `http://147.139.246.88:4000/${user.profilePicture}`,
             Token: token
         });
     } catch (error) {
@@ -231,7 +234,13 @@ exports.updateUser = async (req, res) => {
         const logData = `Time: ${new Date().toISOString()}\nRequest: ${JSON.stringify(req.body)}\n\n`;
         fs.appendFileSync(path.join(__dirname, 'request.log'), logData);
 
-        res.status(200).json({ message: 'User updated successfully', user });
+        res.status(200).json({ 
+            message: 'User updated successfully', 
+            user: {
+                ...user.toJSON(),
+                profilePictureURL: `http://147.139.246.88:4000/${user.profilePicture}`
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error updating user', error: error.message });
     }
@@ -253,7 +262,12 @@ exports.getUserDetails = async (req, res) => {
             return res.status(404).json({ message: 'Anda belum login, silahkan login dulu' });
         }
 
-        res.status(200).json({ user });
+        res.status(200).json({ 
+            user: {
+                ...user.toJSON(),
+                profilePictureURL: `http://147.139.246.88:4000/${user.profilePicture}`
+            }
+        });
         console.log(user);
     } catch (error) {
         console.error('Error retrieving user details:', error);
@@ -277,7 +291,7 @@ exports.getAllUsers = async (req, res) => {
 
         const usersWithProfilePictureURL = users.map(user => ({
             ...user.toJSON(),
-            profilePictureURL: `${req.protocol}://${req.get('host')}/${user.profilePicture}`
+            profilePictureURL: `http://147.139.246.88:4000/${user.profilePicture}`
         }));
 
         res.status(200).json(usersWithProfilePictureURL);
@@ -405,7 +419,10 @@ exports.registerSeller = async (req, res) => {
 
         res.status(201).json({ 
             message: 'Seller registered successfully. Please verify your phone with the OTP sent via WhatsApp.', 
-            user: newUser,
+            user: {
+                ...newUser.toJSON(),
+                profilePictureURL: `http://147.139.246.88:4000/${newUser.profilePicture}`
+            },
             otp,
             otp_id
         });
@@ -470,6 +487,70 @@ exports.resendOTP = async (req, res) => {
     }
 };
 
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { identifier } = req.body;
+
+        // Validate if identifier is email or phone number
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+        const isPhoneNumber = /^(\+62|62|0)8\d{8,12}$/.test(identifier);
+
+        if (!isEmail && !isPhoneNumber) {
+            return res.status(400).json({ message: 'Identifier must be a valid email or phone number' });
+        }
+
+        // Find user based on identifier
+        const user = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { Email: identifier },
+                    { phoneNumber: identifier }
+                ]
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate a password reset token
+        const resetToken = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const resetURL = `http://147.139.246.88:4000/reset-password?token=${resetToken}`;
+
+        // Send reset URL to user's email (implementation depends on your email service)
+        // await sendEmail(user.Email, 'Password Reset', `Click the link to reset your password: ${resetURL}`);
+
+        res.status(200).json({ message: 'Password reset link sent successfully', resetURL });
+    } catch (error) {
+        console.error('Error during forgot password:', error);
+        res.status(500).json({ message: 'Error during forgot password', error: error.message });
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findByPk(decoded.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.PasswordHash = hashedPassword;
+        await user.save();
+
+        res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error('Error during password reset:', error);
+        res.status(500).json({ message: 'Error during password reset', error: error.message });
+    }
+};
+
 module.exports = {
     register: exports.register,
     login: exports.login,
@@ -481,5 +562,7 @@ module.exports = {
     verifyOTP: exports.verifyOTP,
     deleteUser: exports.deleteUser,
     registerSeller: exports.registerSeller,
-    resendOTP: exports.resendOTP
+    resendOTP: exports.resendOTP,
+    forgotPassword: exports.forgotPassword,
+    resetPassword: exports.resetPassword
 };

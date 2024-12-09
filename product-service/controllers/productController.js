@@ -26,7 +26,7 @@ exports.getProducts = async (req, res) => {
         const productsWithImageURLs = products.map(product => {
             const productImages = product.ProductImages.map(image => ({
                 ...image.toJSON(),
-                ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+                ImageURL: `http://147.139.246.88:5000/${image.ImageURL}`
             }));
             return {
                 ...product.toJSON(),
@@ -186,11 +186,11 @@ exports.searchProducts = async (req, res) => {
             ]
         });
 
-        // Tambahkan URL gambar ke dalam respons
+        // Add image URLs to the response
         const productsWithImageURLs = products.map(product => {
             const productImages = product.ProductImages.map(image => ({
                 ...image.toJSON(),
-                ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+                ImageURL: `http://147.139.246.88:5000/${image.ImageURL}`
             }));
             return {
                 ...product.toJSON(),
@@ -218,11 +218,11 @@ exports.searchProductsByCategory = async (req, res) => {
             ]
         });
 
-        // Tambahkan URL gambar ke dalam respons
+        // Add image URLs to the response
         const productsWithImageURLs = products.map(product => {
             const productImages = product.ProductImages.map(image => ({
                 ...image.toJSON(),
-                ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+                ImageURL: `http://147.139.246.88:5000/${image.ImageURL}`
             }));
             return {
                 ...product.toJSON(),
@@ -253,7 +253,7 @@ exports.getProductDetails = async (req, res) => {
 
         const productImages = product.ProductImages.map(image => ({
             ...image.toJSON(),
-            ImageURL: `${req.protocol}://${req.get('host')}/${image.ImageURL}`
+            ImageURL: `http://147.139.246.88:5000/${image.ImageURL}`
         }));
 
         const productDetails = {

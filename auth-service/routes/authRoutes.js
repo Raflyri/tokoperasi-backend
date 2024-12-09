@@ -71,6 +71,12 @@ router.post('/verify-otp', userController.verifyOTP);
 // Route untuk mengirim ulang OTP
 router.post('/resend-otp', userController.resendOTP);
 
+// Route untuk forgot password
+router.post('/forgot-password', userController.forgotPassword);
+
+// Route for reset password
+router.post('/reset-password', userController.resetPassword);
+
 // Route untuk update user (memerlukan autentikasi)
 router.put('/update/:id', authenticate, upload.single('profilePicture'), resizeImage, userController.updateUser);
 
