@@ -120,35 +120,6 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Logika untuk mengarahkan request produk dan detail seller ke product-service dan auth-service
-exports.getProductAndSellerDetails = async (req, res) => {
-  try {
-    const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/${req.params.id}`);
-    const productData = productResponse.data;
-
-    if (!productData) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${productData.sellerId}`);
-    const sellerData = sellerResponse.data;
-
-    if (!sellerData) {
-      return res.status(404).json({ message: 'Seller not found' });
-    }
-
-    const combinedData = {
-      ...productData,
-      seller: sellerData
-    };
-
-    res.status(200).json(combinedData);
-  } catch (error) {
-    console.error('Error fetching product or seller details:', error.message);
-    res.status(500).send('Error fetching product or seller details');
-  }
-};
-
 // Logika untuk mengarahkan request search produk ke product-service
 exports.searchProducts = async (req, res) => {
   console.log('Search products request received:', req.query);

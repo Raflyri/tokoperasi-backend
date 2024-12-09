@@ -66,11 +66,12 @@ app.use('/addresses', proxy(process.env.ADDRESS_SERVICE_URL, proxyOptions));
 app.use('/cart', proxy(process.env.CART_SERVICE_URL, proxyOptions));
 
 // Route untuk mendapatkan produk dan detail seller
-app.get('/products/:id/details', async (req, res) => {
+app.get('/detail/products/:id', async (req, res) => {
     console.log('Get product by ID request received:', req.params);
     try {
         const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/${req.params.id}`);
         const productData = productResponse.data;
+        console.log('Product data:', productData);
 
         if (!productData) {
             return res.status(404).json({ message: 'Product not found' });
@@ -78,8 +79,9 @@ app.get('/products/:id/details', async (req, res) => {
 
         console.log('Product data:', productData);
 
-        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${productData.SellerID}`);
+        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details-v2/${productData.SellerID}`);
         const sellerData = sellerResponse.data;
+        console.log('Seller data:', sellerData);
 
         if (!sellerData) {
             return res.status(404).json({ message: 'Seller not found' });
@@ -91,6 +93,7 @@ app.get('/products/:id/details', async (req, res) => {
             ...productData,
             seller: sellerData
         };
+        console.log('Combined data:', combinedData);
 
         res.status(200).json(combinedData);
     } catch (error) {

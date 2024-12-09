@@ -266,3 +266,31 @@ exports.getProductDetails = async (req, res) => {
         res.status(500).json({ message: 'Error fetching product details', error: error.message });
     }
 };
+
+// Get seller details for a product
+exports.getSellerDetailsForProduct = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const product = await Product.findByPk(id, {
+            include: [
+                { model: Category, attributes: ['CategoryName'] },
+                { model: ProductImage, attributes: ['ImageURL'] }
+            ]
+        });
+
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${product.SellerID}`);
+        const sellerData = sellerResponse.data;
+
+        if (!sellerData) {
+            return res.status(404).json({ message: 'Seller not found' });
+        }
+
+        res.status(200).json(sellerData);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching seller details', error: error.message });
+    }
+};

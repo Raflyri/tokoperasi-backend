@@ -80,6 +80,8 @@ router.put('/verify-user/:userId', authenticate, userController.verifyUser);
 // Route untuk mendapatkan detail user beserta sesi loginnya
 router.get('/user-details/:id', authenticate, userController.getUserDetails);
 
+router.get('/user-details-v2/:id', userController.getUserDetails);
+
 router.get('/users', userController.getAllUsers);
 
 router.post('/logout', authenticate, userController.logout);

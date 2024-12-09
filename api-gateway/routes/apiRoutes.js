@@ -20,15 +20,14 @@ router.get('/api/auth/user-details/:id', gatewayController.getUserDetails);
 // Rute user yang diarahkan ke auth-service
 router.get('/users/:id', gatewayController.getUser);
 
+// Rute users dengan query parameters yang diarahkan ke auth-service
+router.get('/api/auth/users', gatewayController.getUsers);
+
 // Rute produk yang diarahkan ke product-service
 router.get('/products', gatewayController.getProducts);
 router.get('/products/:id', gatewayController.getProductById);
 router.get('/products/search', gatewayController.searchProducts);
 router.get('/products/category/:categoryID', gatewayController.getProductsByCategory);
-router.get('/products/:id/details', gatewayController.getProductAndSellerDetails);
-
-// Rute users dengan query parameters yang diarahkan ke auth-service
-router.get('/api/auth/users', gatewayController.getUsers);
 
 // Rute cart yang diarahkan ke cart-service
 router.get('/cart', gatewayController.getCart);
