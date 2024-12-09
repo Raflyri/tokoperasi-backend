@@ -103,6 +103,54 @@ app.get('/detail/products/:id', async (req, res) => {
     }
 });
 
+// Route untuk search produk dengan detail seller
+app.get('/search/products', async (req, res) => {
+    console.log('Get product by query request received:', req.query);
+    try {
+        const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/search`, {
+            params: req.query
+        });
+
+        const productDataArray = productResponse.data;
+
+        if (!Array.isArray(productDataArray) || productDataArray.length === 0) {
+            return res.status(404).json({ message: 'No products found' });
+        }
+
+        console.log('Product data:', productDataArray);
+
+        // Iterasi untuk mendapatkan data seller
+        const combinedDataArray = await Promise.all(
+            productDataArray.map(async (product) => {
+                try {
+                    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details-v2/${product.SellerID}`);
+                    const sellerData = sellerResponse.data;
+
+                    console.log(`Seller data for ProductID ${product.ProductID}:`, sellerData);
+
+                    return {
+                        ...product,
+                        seller: sellerData
+                    };
+                } catch (error) {
+                    console.error(`Error fetching seller for ProductID ${product.ProductID}:`, error.message);
+                    return {
+                        ...product,
+                        seller: null, // Atur ke null jika data seller tidak ditemukan
+                    };
+                }
+            })
+        );
+
+        res.status(200).json(combinedDataArray);
+    } catch (error) {
+        console.error('Error fetching products or seller details:', error.message);
+        console.error('Error details:', error.response ? error.response.data : 'No response data');
+        res.status(500).send('Error fetching products or seller details');
+    }
+});
+
+
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'API Gateway' });
 });
