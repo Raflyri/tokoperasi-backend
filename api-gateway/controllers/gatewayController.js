@@ -543,3 +543,26 @@ exports.getAddressById = async (req, res) => {
     res.status(500).send("Error connecting to address-service");
   }
 };
+
+// Logika untuk mengarahkan request advertisements ke advertisement-service
+exports.getAdvertisements = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ADMIN_SERVICE_URL}/advertisements`);
+    console.log("Get advertisements request successful:", response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error("Error connecting to advertisement-service for get advertisements:", error.message);
+    res.status(500).send("Error connecting to advertisement-service");
+  }
+};
+
+exports.getAdvertisementById = async (req, res) => {
+  try {
+    const response = await axios.get(`${process.env.ADMIN_SERVICE_URL}/advertisements/${req.params.id}`);
+    console.log("Get advertisement by ID request successful:", response.data);
+    res.status(response.status).send(response.data);
+  } catch (error) {
+    console.error("Error connecting to advertisement-service for get advertisement by ID:", error.message);
+    res.status(500).send("Error connecting to advertisement-service");
+  }
+};

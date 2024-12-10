@@ -49,6 +49,10 @@ router.get('/shipping', gatewayController.getShipping);
 router.post('/shipping', gatewayController.createShipping);
 router.get('/shipping/:id', gatewayController.getShippingById);
 
+// Rute advertisements yang diarahkan ke advertisement-service
+router.get('/ads', gatewayController.getAdvertisements);
+router.get('/ads/:id', gatewayController.getAdvertisementById);
+
 // Rute admin yang diarahkan ke admin-service
 router.get('/admin', gatewayController.getAdmin);
 router.post('/admin', gatewayController.createAdmin);

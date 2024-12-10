@@ -39,34 +39,37 @@ app.get('/api', (req, res) => {
 });
 
 // Proxy ke Authentication Service
-app.use('/auth', proxy(process.env.AUTH_SERVICE_URL, proxyOptions));
+app.use('/api-auth', proxy(process.env.AUTH_SERVICE_URL, proxyOptions));
 
 // Proxy ke User Data di Authentication Service
-app.use('/users', proxy(process.env.AUTH_SERVICE_URL, proxyOptions));
+app.use('/api-users', proxy(process.env.AUTH_SERVICE_URL, proxyOptions));
 
 // Proxy ke Product Service
-app.use('/products', proxy(process.env.PRODUCT_SERVICE_URL, proxyOptions));
+app.use('/api-products', proxy(process.env.PRODUCT_SERVICE_URL, proxyOptions));
 
 // Proxy ke Cart and Order Service
-app.use('/orders', proxy(process.env.ORDER_SERVICE_URL, proxyOptions));
+app.use('/api-orders', proxy(process.env.ORDER_SERVICE_URL, proxyOptions));
 
 // Proxy ke Payment Service
-app.use('/payments', proxy(process.env.PAYMENT_SERVICE_URL, proxyOptions));
+app.use('/api-payments', proxy(process.env.PAYMENT_SERVICE_URL, proxyOptions));
 
 // Proxy ke Shipping Service
-app.use('/shipping', proxy(process.env.SHIPPING_SERVICE_URL, proxyOptions));
+app.use('/api-shipping', proxy(process.env.SHIPPING_SERVICE_URL, proxyOptions));
 
 // Proxy ke Admin Service
-app.use('/admin', proxy(process.env.ADMIN_SERVICE_URL, proxyOptions));
+app.use('/api-admin', proxy(process.env.ADMIN_SERVICE_URL, proxyOptions));
 
 // Proxy ke Address Service
-app.use('/addresses', proxy(process.env.ADDRESS_SERVICE_URL, proxyOptions));
+app.use('/api-addresses', proxy(process.env.ADDRESS_SERVICE_URL, proxyOptions));
 
 // Proxy ke Cart Service
-app.use('/cart', proxy(process.env.CART_SERVICE_URL, proxyOptions));
+app.use('/api-cart', proxy(process.env.CART_SERVICE_URL, proxyOptions));
+
+// Proxy ke Advertisement Service
+app.use('/api-advertisements', proxy(process.env.ADMIN_SERVICE_URL, proxyOptions));
 
 // Route untuk mendapatkan produk dan detail seller
-app.get('/detail/products/:id', async (req, res) => {
+app.get('/api/detail-products/:id', async (req, res) => {
     console.log('Get product by ID request received:', req.params);
     try {
         const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/${req.params.id}`);
@@ -104,7 +107,7 @@ app.get('/detail/products/:id', async (req, res) => {
 });
 
 // Route untuk search produk dengan detail seller
-app.get('/search/products', async (req, res) => {
+app.get('/api/search-products', async (req, res) => {
     console.log('Get product by query request received:', req.query);
     try {
         const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/search`, {
