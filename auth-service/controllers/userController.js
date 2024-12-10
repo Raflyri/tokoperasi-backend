@@ -302,9 +302,18 @@ exports.getAllUsers = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-    const token = req.headers['authorization'];
+    const token = req.headers['authorization']?.split(' ')[1];
     try {
+        const session = await Session.findOne({ where: { Token: token } });
+        if (!session) {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+
         await Session.destroy({ where: { Token: token } });
+
+        // Log the logout action in the audit table
+        await auditController.logDeleteAction(session.UserID, req.user.username, req.user.secure_id);
+
         res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error during logout', error: error.message });
