@@ -3,31 +3,31 @@ const router = express.Router();
 const gatewayController = require('../controllers/gatewayController');  // Import controller
 
 // Rute login yang diarahkan ke auth-service
-router.post('/api/auth/login', gatewayController.login);
+router.post('/login', gatewayController.login);
 
 // Rute register yang diarahkan ke auth-service
-router.post('/api/auth/register', gatewayController.register);
+router.post('/register', gatewayController.register);
 
 // Rute logout yang diarahkan ke auth-service
-router.post('/api/auth/logout', gatewayController.logout);
+router.post('/logout', gatewayController.logout);
 
 // Rute update user yang diarahkan ke auth-service
-router.put('/api/auth/update/:id', gatewayController.updateUser);
+router.put('/update/:id', gatewayController.updateUser);
 
 // Rute user details yang diarahkan ke auth-service
-router.get('/api/auth/user-details/:id', gatewayController.getUserDetails);
+router.get('/user-details/:id', gatewayController.getUserDetails);
 
 // Rute user yang diarahkan ke auth-service
 router.get('/users/:id', gatewayController.getUser);
 
 // Rute users dengan query parameters yang diarahkan ke auth-service
-router.get('/api/auth/users', gatewayController.getUsers);
+router.get('/all-users', gatewayController.getUsers);
 
 // Rute produk yang diarahkan ke product-service
-router.get('/products', gatewayController.getProducts);
-router.get('/products/:id', gatewayController.getProductById);
-router.get('/products/search', gatewayController.searchProducts);
-router.get('/products/category/:categoryID', gatewayController.getProductsByCategory);
+router.get('/', gatewayController.getProducts);
+router.get('/:id', gatewayController.getProductById);
+router.get('/search', gatewayController.searchProducts);
+router.get('/category/:categoryID', gatewayController.getProductsByCategory);
 
 // Rute cart yang diarahkan ke cart-service
 router.get('/cart', gatewayController.getCart);
