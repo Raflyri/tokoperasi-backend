@@ -36,8 +36,9 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-    console.log(`Admin Service berjalan di port ${PORT}`);
+const HOST = '147.139.246.88';
+app.listen(PORT, HOST, () => {
+    console.log(`Admin Service berjalan di http://${HOST}:${PORT}`);
 });
 
 // Sync database

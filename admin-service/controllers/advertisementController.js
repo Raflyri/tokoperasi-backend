@@ -9,7 +9,7 @@ exports.getAdvertisements = async (req, res) => {
         const adsWithImageURLs = ads.map(ad => {
             return {
                 ...ad.toJSON(),
-                ImageURL: ad.ImageURL ? `${req.protocol}://${req.get('host')}/${ad.ImageURL}` : null
+                ImageURL: ad.ImageURL ? `http://147.139.246.88:8000/${ad.ImageURL}` : null
             };
         });
 
