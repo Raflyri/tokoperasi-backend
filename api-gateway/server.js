@@ -126,7 +126,7 @@ app.get('/api/search-products', async (req, res) => {
         const combinedDataArray = await Promise.all(
             productDataArray.map(async (product) => {
                 try {
-                    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details-v2/${product.SellerID}`);
+                    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2/${product.SellerID}`);
                     const sellerData = sellerResponse.data;
 
                     console.log(`Seller data for ProductID ${product.ProductID}:`, sellerData);
