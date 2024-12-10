@@ -82,7 +82,7 @@ app.get('/api/detail-products/:id', async (req, res) => {
 
         console.log('Product data:', productData);
 
-        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/api/auth/user-details-v2/${productData.SellerID}`);
+        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2/${productData.SellerID}`);
         const sellerData = sellerResponse.data;
         console.log('Seller data:', sellerData);
 
