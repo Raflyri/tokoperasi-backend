@@ -92,4 +92,6 @@ router.post('/logout', authenticate, userController.logout);
 
 router.delete('/delete-account/:id', authenticate, userController.deleteAccount);
 
+router.delete('/delete-account-v2/:id', userController.deleteAccount);
+
 module.exports = router;
