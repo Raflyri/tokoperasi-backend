@@ -84,12 +84,12 @@ router.put('/update/:id', authenticate, upload.single('profilePicture'), resizeI
 router.put('/verify-user/:userId', authenticate, userController.verifyUser);
 
 // Route untuk mendapatkan detail user beserta sesi loginnya
-router.get('/user-details/:id', authenticate, userController.getUserDetails);
+router.get('/user-details', authenticate, userController.getUsers);
 
-router.get('/user-details-v2/:id', userController.getUserDetails);
-
-router.get('/users', userController.getAllUsers);
+router.get('/user-details-v2', userController.getUsers);
 
 router.post('/logout', authenticate, userController.logout);
+
+router.delete('/delete-account/:id', authenticate, userController.deleteAccount);
 
 module.exports = router;

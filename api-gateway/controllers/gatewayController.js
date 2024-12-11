@@ -232,6 +232,25 @@ exports.getProductsByCategory = async (req, res) => {
   }
 };
 
+// Logika untuk mengarahkan request produk berdasarkan seller ID ke product-service
+exports.getProductsBySeller = async (req, res) => {
+    console.log('Get products by seller ID request received:', req.params);
+    try {
+        const response = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/seller/${req.params.userID}`);
+        const products = response.data;
+
+        if (!products || products.length === 0) {
+            return res.status(404).json({ message: 'No products found for this seller' });
+        }
+
+        console.log('Products data:', products);
+        res.status(200).json(products);
+    } catch (error) {
+        console.error('Error connecting to product-service for get products by seller:', error.message);
+        res.status(500).send('Error connecting to product-service');
+    }
+};
+
 // Logika untuk mengarahkan request users dengan query parameters ke auth-service
 exports.getUsers = async (req, res) => {
   try {
@@ -565,4 +584,29 @@ exports.getAdvertisementById = async (req, res) => {
     console.error("Error connecting to advertisement-service for get advertisement by ID:", error.message);
     res.status(500).send("Error connecting to advertisement-service");
   }
+};
+
+// Logika untuk mengarahkan request delete akun ke auth-service dan menghapus data terkait
+exports.deleteAccount = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        // Hapus akun dari auth-service
+        await axios.delete(`${process.env.AUTH_SERVICE_URL}/api/auth/delete/${userId}`);
+        console.log(`User account ${userId} deleted from auth-service`);
+
+        // Hapus data terkait dari service lain
+        await axios.delete(`${process.env.CART_SERVICE_URL}/cart/user/${userId}`);
+        console.log(`Cart data for user ${userId} deleted from cart-service`);
+
+        await axios.delete(`${process.env.ORDER_SERVICE_URL}/orders/user/${userId}`);
+        console.log(`Order data for user ${userId} deleted from order-service`);
+
+        await axios.delete(`${process.env.ADDRESS_SERVICE_URL}/addresses/user/${userId}`);
+        console.log(`Address data for user ${userId} deleted from address-service`);
+
+        res.status(200).json({ message: 'User account and related data deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user account or related data:', error.message);
+        res.status(500).send('Error deleting user account or related data');
+    }
 };

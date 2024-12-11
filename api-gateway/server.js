@@ -153,6 +153,70 @@ app.get('/api/search-products', async (req, res) => {
     }
 });
 
+// Route untuk mendapatkan produk berdasarkan seller ID dan detail user
+app.get('/api/seller-products/:userID', async (req, res) => {
+    console.log('Get products by seller ID request received:', req.params);
+    try {
+        // Fetch user details using query parameter
+        const userResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2`, {
+            params: { id: req.params.userID }
+        });
+        const userData = userResponse.data;
+
+        if (!userData) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Fetch products by seller ID using query parameter
+        const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products`, {
+            params: { SellerID: req.params.userID }
+        });
+        const products = productResponse.data;
+
+        if (!products || products.length === 0) {
+            return res.status(404).json({ message: 'No products found for this seller' });
+        }
+
+        console.log('User data:', userData);
+        console.log('Products data:', products);
+
+        const combinedData = {
+            user: userData,
+            products: products
+        };
+
+        res.status(200).json(combinedData);
+    } catch (error) {
+        console.error('Error fetching products for seller:', error.message);
+        console.error('Error details:', error.response ? error.response.data : 'No response data');
+        res.status(500).json({ message: 'Error fetching products for seller', error: error.message });
+    }
+});
+
+// Route untuk menghapus akun dan data terkait
+app.delete('/api/delete-account/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        // Hapus akun dari auth-service
+        await axios.delete(`${process.env.AUTH_SERVICE_URL}/delete-account/${userId}`);
+        console.log(`User account ${userId} deleted from auth-service`);
+
+        // Hapus data terkait dari service lain
+        await axios.delete(`${process.env.CART_SERVICE_URL}/cart/user/${userId}`);
+        console.log(`Cart data for user ${userId} deleted from cart-service`);
+
+        await axios.delete(`${process.env.ORDER_SERVICE_URL}/orders/user/${userId}`);
+        console.log(`Order data for user ${userId} deleted from order-service`);
+
+        await axios.delete(`${process.env.ADDRESS_SERVICE_URL}/addresses/user/${userId}`);
+        console.log(`Address data for user ${userId} deleted from address-service`);
+
+        res.status(200).json({ message: 'User account and related data deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user account or related data:', error.message);
+        res.status(500).send('Error deleting user account or related data');
+    }
+});
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'API Gateway' });

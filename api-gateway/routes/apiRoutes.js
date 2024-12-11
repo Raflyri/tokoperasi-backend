@@ -29,6 +29,9 @@ router.get('/:id', gatewayController.getProductById);
 router.get('/search', gatewayController.searchProducts);
 router.get('/category/:categoryID', gatewayController.getProductsByCategory);
 
+// Rute untuk mendapatkan produk berdasarkan seller ID
+router.get('/seller-products/:userID', gatewayController.getProductsBySeller);
+
 // Rute cart yang diarahkan ke cart-service
 router.get('/cart', gatewayController.getCart);
 router.post('/cart', gatewayController.addToCart);
@@ -62,5 +65,8 @@ router.get('/admin/:id', gatewayController.getAdminById);
 router.get('/addresses', gatewayController.getAddresses);
 router.post('/addresses', gatewayController.createAddress);
 router.get('/addresses/:id', gatewayController.getAddressById);
+
+// Rute untuk menghapus akun dan data terkait
+router.delete('/delete-account/:id', gatewayController.deleteAccount);
 
 module.exports = router;

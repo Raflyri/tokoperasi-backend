@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/authRoutes');  
 const sequelize = require('./config/database'); 
 const path = require('path');
+const userController = require('./controllers/userController');
+const authenticate = require('./middleware/authenticate');
 
 const app = express();
 
@@ -23,13 +25,15 @@ app.get('/api', (req, res) => {
     res.send('CORS bekerja!');
 });
 
-app.get('/', (req, res) => {
-    res.status(200).json({ message: 'API Endpoint Authentication' });
-});
+app.delete('/delete-account/:id', authenticate, userController.deleteAccount);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/', authRoutes);
+
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'API Endpoint Authentication' });
+});
 
 const PORT = process.env.PORT || 4000;
 sequelize.sync().then(() => {

@@ -246,36 +246,7 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-exports.getUserDetails = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const user = await User.findByPk(userId, {
-            include: [{
-                model: Session,
-                attributes: ['Token', 'CreatedAt', 'ExpiresAt']
-            }]
-        });
-
-        
-
-        if (!user) {
-            return res.status(404).json({ message: 'Anda belum login, silahkan login dulu' });
-        }
-
-        res.status(200).json({ 
-            user: {
-                ...user.toJSON(),
-                profilePictureURL: `http://147.139.246.88:4000/${user.profilePicture}`
-            }
-        });
-        console.log(user);
-    } catch (error) {
-        console.error('Error retrieving user details:', error);
-        res.status(500).json({ message: 'Error retrieving user details', error: error.message });
-    }
-};
-
-exports.getAllUsers = async (req, res) => {
+exports.getUsers = async (req, res) => {
     try {
         const { username, id, role, isVerified, isMember } = req.query;
         console.log('Query Params:', req.query);
@@ -287,7 +258,13 @@ exports.getAllUsers = async (req, res) => {
         if (isVerified !== undefined) filterConditions.IsVerified = isVerified === 'true';
         if (isMember !== undefined) filterConditions.IsMember = isMember === 'true';
 
-        const users = await User.findAll({ where: filterConditions });
+        const users = await User.findAll({
+            where: filterConditions,
+            include: [{
+                model: Session,
+                attributes: ['Token', 'CreatedAt', 'ExpiresAt']
+            }]
+        });
 
         const usersWithProfilePictureURL = users.map(user => ({
             ...user.toJSON(),
@@ -350,26 +327,6 @@ exports.verifyOTP = async (req, res) => {
     } catch (error) {
         console.error('Error verifying OTP:', error);
         res.status(500).json({ message: 'Error verifying OTP', error: error.message });
-    }
-};
-
-exports.deleteUser = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        user.deleted_at = Math.floor(Date.now() / 1000);
-        await user.save();
-
-        await auditController.logDeleteAction(userId, req.user.username, req.user.secure_id);
-
-        res.status(200).json({ message: 'User deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        res.status(500).json({ message: 'Error deleting user', error: error.message });
     }
 };
 
@@ -560,18 +517,43 @@ exports.resetPassword = async (req, res) => {
     }
 };
 
+exports.deleteAccount = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Delete related data
+        await Identity.destroy({ where: { UserID: userId } });
+        await Session.destroy({ where: { UserID: userId } });
+        await AuditLog.destroy({ where: { user_id: userId } });
+
+        // Delete user
+        await user.destroy();
+
+        // Log the deletion in the audit table
+        await auditController.logDeleteAction(userId, req.user.username, req.user.secure_id);
+
+        res.status(200).json({ message: 'User account deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user account:', error);
+        res.status(500).json({ message: 'Error deleting user account', error: error.message });
+    }
+};
+
 module.exports = {
     register: exports.register,
     login: exports.login,
     updateUser: exports.updateUser,
-    getUserDetails: exports.getUserDetails,
-    getAllUsers: exports.getAllUsers,
+    getUsers: exports.getUsers,
     logout: exports.logout,
     verifyUser: exports.verifyUser,
     verifyOTP: exports.verifyOTP,
-    deleteUser: exports.deleteUser,
     registerSeller: exports.registerSeller,
     resendOTP: exports.resendOTP,
     forgotPassword: exports.forgotPassword,
-    resetPassword: exports.resetPassword
+    resetPassword: exports.resetPassword,
+    deleteAccount: exports.deleteAccount
 };
