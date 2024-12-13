@@ -6,7 +6,7 @@ const sequelize = require('./config/database');  // Import sequelize instance
 const app = express();
 
 app.use(bodyParser.json());
-app.use('/addresses', addressRoutes);
+app.use('/', addressRoutes);
 
 // Konfigurasi CORS
 app.use(cors({
@@ -16,12 +16,8 @@ app.use(cors({
 }));
 
 // Rute lainnya
-app.get('/api', (req, res) => {
+app.get('/api-cors', (req, res) => {
     res.send('CORS bekerja!');
-});
-
-app.get('/', (req, res) => {
-    res.status(200).json({ message: 'API Endpoint Address' });
 });
 
 const PORT = process.env.PORT || 7000;

@@ -5,7 +5,7 @@ exports.getAdvertisements = async (req, res) => {
     try {
         const ads = await Advertisement.findAll();
 
-        // Tambahkan URL gambar ke dalam respons
+        // Add full URL to ImageURL
         const adsWithImageURLs = ads.map(ad => {
             return {
                 ...ad.toJSON(),

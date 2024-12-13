@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const productController = require('../controllers/productController');
 const multer = require('multer');
 const path = require('path');
+const authenticate = require('../middleware/authenticate'); // Import the authenticate middleware
 
-const { getProducts, addProduct, updateProduct, deleteProduct, searchProductsByCategory, searchProducts, getProductDetails } = require('../controllers/productController'); // Ensure getProductDetails is imported
+const { getProducts, addProduct, updateProduct, deleteProduct, searchProducts } = require('../controllers/productController'); // Ensure all functions are imported
 
 // Konfigurasi penyimpanan file
 const storage = multer.diskStorage({
@@ -39,21 +39,15 @@ const upload = multer({
 router.get('/', getProducts);
 
 // Add a new product
-router.post('/', upload.array('images', 5), addProduct); // Menggunakan upload.array untuk mengunggah banyak file
+router.post('/', authenticate, upload.array('images', 5), addProduct); // Use authenticate middleware
 
 // Update a product
-router.put('/:id', upload.array('images', 5), updateProduct); // Menggunakan upload.array untuk mengunggah banyak file
+router.put('/:id', authenticate, upload.array('images', 5), updateProduct); // Use authenticate middleware
 
 // Delete a product
-router.delete('/:id', deleteProduct);
+router.delete('/', authenticate, deleteProduct); // Use authenticate middleware
 
-// Search products by category
-router.get('/category/:categoryID', searchProductsByCategory);
-
-router.get('/search', searchProducts); // Ensure searchProducts is used correctly
-
-router.get('/:id/details', getProductDetails); // Ensure this line exists
-
-router.get('/:id', getProductDetails); // Add this line
+// Search products
+router.get('/search', searchProducts); // Add search route
 
 module.exports = router;

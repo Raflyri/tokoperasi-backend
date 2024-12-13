@@ -4,20 +4,32 @@ const { Op } = require('sequelize');
 // Get all addresses
 exports.getAddresses = async (req, res) => {
     try {
-        const { AddressLine1, AddressLine2, City, Province, PostalCode, IsDefault, LabelAddress, RecipientName, RecipientPhone } = req.query;
-        const filter = { UserID: req.user.id };
+        const addresses = await UserAddress.findAll();
+        res.status(200).json(addresses);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch addresses' });
+    }
+};
 
-        if (AddressLine1) filter.AddressLine1 = { [Op.like]: `%${AddressLine1}%` };
-        if (AddressLine2) filter.AddressLine2 = { [Op.like]: `%${AddressLine2}%` };
-        if (City) filter.City = { [Op.like]: `%${City}%` };
-        if (Province) filter.Province = { [Op.like]: `%${Province}%` };
-        if (PostalCode) filter.PostalCode = { [Op.like]: `%${PostalCode}%` };
-        if (IsDefault !== undefined) filter.IsDefault = IsDefault === 'true';
-        if (LabelAddress) filter.LabelAddress = { [Op.like]: `%${LabelAddress}%` };
-        if (RecipientName) filter.RecipientName = { [Op.like]: `%${RecipientName}%` };
-        if (RecipientPhone) filter.RecipientPhone = { [Op.like]: `%${RecipientPhone}%` };
+// Search address by various fields
+exports.searchAddress = async (req, res) => {
+    try {
+        const { addressID, userID, AddressLine, City, Province, PostalCode, LabelAddress, RecipientName, RecipientPhone } = req.query;
+        const whereClause = {};
+        if (addressID) whereClause.AddressID = addressID;
+        if (userID) whereClause.UserID = userID;
+        if (AddressLine) whereClause.AddressLine1 = { [Op.like]: `%${AddressLine}%` };
+        if (City) whereClause.City = { [Op.like]: `%${City}%` };
+        if (Province) whereClause.Province = { [Op.like]: `%${Province}%` };
+        if (PostalCode) whereClause.PostalCode = { [Op.like]: `%${PostalCode}%` };
+        if (LabelAddress) whereClause.LabelAddress = { [Op.like]: `%${LabelAddress}%` };
+        if (RecipientName) whereClause.RecipientName = { [Op.like]: `%${RecipientName}%` };
+        if (RecipientPhone) whereClause.RecipientPhone = { [Op.like]: `%${RecipientPhone}%` };
 
-        const addresses = await UserAddress.findAll({ where: filter });
+        const addresses = await UserAddress.findAll({ where: whereClause });
+        if (addresses.length === 0) {
+            return res.status(404).json({ message: 'Address not found' });
+        }
         res.status(200).json({ message: 'Addresses fetched successfully', addresses });
     } catch (error) {
         console.error('Error fetching addresses:', error);
@@ -25,18 +37,18 @@ exports.getAddresses = async (req, res) => {
     }
 };
 
-// Get address by ID
-exports.getAddressById = async (req, res) => {
+// Get addresses by user token and addressID
+exports.getAddressesByUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const address = await UserAddress.findOne({ where: { AddressID: id, UserID: req.user.id } });
-        if (!address) {
-            return res.status(404).json({ message: 'Address not found' });
-        }
-        res.status(200).json({ message: 'Address fetched successfully', address });
+        const userId = req.user.id;
+        const { addressID } = req.query;
+        const whereClause = { UserID: userId };
+        if (addressID) whereClause.AddressID = addressID;
+
+        const addresses = await UserAddress.findAll({ where: whereClause });
+        res.status(200).json(addresses);
     } catch (error) {
-        console.error('Error fetching address:', error);
-        res.status(500).json({ message: 'Error fetching address', error: error.message });
+        res.status(500).json({ error: 'Failed to fetch user addresses' });
     }
 };
 
@@ -44,8 +56,9 @@ exports.getAddressById = async (req, res) => {
 exports.addAddress = async (req, res) => {
     try {
         const { AddressLine1, AddressLine2, City, Province, PostalCode, IsDefault, LabelAddress, RecipientName, RecipientPhone, Latitude, Longitude } = req.body;
+        const userId = req.user.id;
         const newAddress = await UserAddress.create({ 
-            UserID: req.user.id, 
+            UserID: userId, 
             AddressLine1, 
             AddressLine2, 
             City, 
@@ -70,7 +83,8 @@ exports.updateAddress = async (req, res) => {
     try {
         const { id } = req.params;
         const { AddressLine1, AddressLine2, City, Province, PostalCode, IsDefault, LabelAddress, RecipientName, RecipientPhone, Latitude, Longitude } = req.body;
-        const address = await UserAddress.findOne({ where: { AddressID: id, UserID: req.user.id } });
+        const userId = req.user.id;
+        const address = await UserAddress.findOne({ where: { AddressID: id, UserID: userId } });
         if (!address) {
             return res.status(404).json({ message: 'Address not found' });
         }

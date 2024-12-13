@@ -38,7 +38,7 @@ const upload = multer({
 router.get('/', advertisementController.getAdvertisements);
 
 // Get advertisement by ID
-router.get('/:id', authenticate, advertisementController.getAdvertisementById);
+router.get('/:id', advertisementController.getAdvertisementById);
 
 // Create a new advertisement
 router.post('/', authenticate, upload.single('ImageURL'), advertisementController.addAdvertisement);

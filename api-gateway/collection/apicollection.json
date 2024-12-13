@@ -1,0 +1,429 @@
+{
+  "info": {
+    "name": "API Gateway Collection",
+    "description": "Collection of API Gateway endpoints",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/login",
+          "host": ["{{base_url}}"],
+          "path": ["login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"user\",\n  \"password\": \"pass\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/register",
+          "host": ["{{base_url}}"],
+          "path": ["register"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"user\",\n  \"password\": \"pass\",\n  \"email\": \"user@example.com\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/logout",
+          "host": ["{{base_url}}"],
+          "path": ["logout"]
+        }
+      }
+    },
+    {
+      "name": "Update User",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/update/:id",
+          "host": ["{{base_url}}"],
+          "path": ["update", ":id"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get User Details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/user-details/:id",
+          "host": ["{{base_url}}"],
+          "path": ["user-details", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get Users",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/all-users",
+          "host": ["{{base_url}}"],
+          "path": ["all-users"]
+        }
+      }
+    },
+    {
+      "name": "Get Products",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": ["{{base_url}}"],
+          "path": [""]
+        }
+      }
+    },
+    {
+      "name": "Get Product By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/:id",
+          "host": ["{{base_url}}"],
+          "path": [":id"]
+        }
+      }
+    },
+    {
+      "name": "Search Products",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/search",
+          "host": ["{{base_url}}"],
+          "path": ["search"]
+        }
+      }
+    },
+    {
+      "name": "Get Products By Category",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/category/:categoryID",
+          "host": ["{{base_url}}"],
+          "path": ["category", ":categoryID"]
+        }
+      }
+    },
+    {
+      "name": "Get Products By Seller",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/seller-products/:userID",
+          "host": ["{{base_url}}"],
+          "path": ["seller-products", ":userID"]
+        }
+      }
+    },
+    {
+      "name": "Get Cart",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/cart",
+          "host": ["{{base_url}}"],
+          "path": ["cart"]
+        }
+      }
+    },
+    {
+      "name": "Add To Cart",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/cart",
+          "host": ["{{base_url}}"],
+          "path": ["cart"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productID\": \"123\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "Remove From Cart",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/cart/:id",
+          "host": ["{{base_url}}"],
+          "path": ["cart", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get Orders",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/orders",
+          "host": ["{{base_url}}"],
+          "path": ["orders"]
+        }
+      }
+    },
+    {
+      "name": "Create Order",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/orders",
+          "host": ["{{base_url}}"],
+          "path": ["orders"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productID\": \"123\",\n  \"quantity\": 1\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Order By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/orders/:id",
+          "host": ["{{base_url}}"],
+          "path": ["orders", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get Payments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/payments",
+          "host": ["{{base_url}}"],
+          "path": ["payments"]
+        }
+      }
+    },
+    {
+      "name": "Create Payment",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/payments",
+          "host": ["{{base_url}}"],
+          "path": ["payments"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderID\": \"123\",\n  \"amount\": 100\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Payment By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/payments/:id",
+          "host": ["{{base_url}}"],
+          "path": ["payments", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get Shipping",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/shipping",
+          "host": ["{{base_url}}"],
+          "path": ["shipping"]
+        }
+      }
+    },
+    {
+      "name": "Create Shipping",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/shipping",
+          "host": ["{{base_url}}"],
+          "path": ["shipping"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderID\": \"123\",\n  \"address\": \"123 Main St\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Shipping By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/shipping/:id",
+          "host": ["{{base_url}}"],
+          "path": ["shipping", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get Advertisements",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/ads",
+          "host": ["{{base_url}}"],
+          "path": ["ads"]
+        }
+      }
+    },
+    {
+      "name": "Get Advertisement By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/ads/:id",
+          "host": ["{{base_url}}"],
+          "path": ["ads", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get Admin",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin",
+          "host": ["{{base_url}}"],
+          "path": ["admin"]
+        }
+      }
+    },
+    {
+      "name": "Create Admin",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin",
+          "host": ["{{base_url}}"],
+          "path": ["admin"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"adminpass\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Admin By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/:id",
+          "host": ["{{base_url}}"],
+          "path": ["admin", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Get Addresses",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/addresses",
+          "host": ["{{base_url}}"],
+          "path": ["addresses"]
+        }
+      }
+    },
+    {
+      "name": "Create Address",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/addresses",
+          "host": ["{{base_url}}"],
+          "path": ["addresses"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userID\": \"123\",\n  \"address\": \"123 Main St\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Address By ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/addresses/:id",
+          "host": ["{{base_url}}"],
+          "path": ["addresses", ":id"]
+        }
+      }
+    },
+    {
+      "name": "Delete Account",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/delete-account/:id",
+          "host": ["{{base_url}}"],
+          "path": ["delete-account", ":id"]
+        }
+      }
+    }
+  ]
+}

@@ -27,8 +27,6 @@ app.get('/api', (req, res) => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/products', productRoutes);
-app.get('/products/:id', productRoutes); // Add this line
-
 app.use('/categories', categoryRoutes);
 
 app.get('/', (req, res) => {

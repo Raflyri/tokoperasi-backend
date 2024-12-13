@@ -88,6 +88,8 @@ router.get('/user-details', authenticate, userController.getUsers);
 
 router.get('/user-details-v2', userController.getUsers);
 
+router.get('/users', userController.getUsers);
+
 router.post('/logout', authenticate, userController.logout);
 
 router.delete('/delete-account/:id', authenticate, userController.deleteAccount);

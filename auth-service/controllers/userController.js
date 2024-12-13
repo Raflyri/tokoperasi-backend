@@ -76,6 +76,74 @@ exports.register = async (req, res) => {
     }
 };
 
+exports.registerSeller = async (req, res) => {
+    try {
+        const { username, email, phoneNumber, password } = req.body;
+        console.log('Request Body:', req.body);
+
+        // Validasi apakah email atau nomor telepon sudah ada di database
+        const existingUser = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { Email: email },
+                    { phoneNumber: phoneNumber }
+                ]
+            }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email or Phone Number already exists. Please use a different email or phone number.' });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Generate OTP using Fazpass
+        const otpResponse = await generateOTPSMS(phoneNumber);
+        const otp = otpResponse.data.otp;
+        const otp_id = otpResponse.data.id;
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+
+        // Buat pengguna baru
+        const newUser = await User.create({
+            Username: username,
+            Email: email,
+            phoneNumber: phoneNumber,
+            PasswordHash: hashedPassword,
+            Role: 'seller',
+            IsVerified: false,
+            otp,
+            otp_id,
+            otpExpiresAt
+        });
+
+        // Simpan OTP di tabel AuditLogs
+        await AuditLog.create({
+            action: 'otp',
+            user_id: newUser.UserID,
+            otp,
+            otp_id,
+            otpExpiresAt
+        });
+
+        // Log audit record for user registration
+        await auditController.logCreateAction(newUser.UserID, email, newUser.secure_id, 'Seller created', otp, otp_id);
+
+        res.status(201).json({ 
+            message: 'Seller registered successfully. Please verify your phone with the OTP sent via WhatsApp.', 
+            user: {
+                ...newUser.toJSON(),
+                profilePictureURL: `http://147.139.246.88:4000/${newUser.profilePicture}`
+            },
+            otp,
+            otp_id
+        });
+    } catch (error) {
+        console.error('Error during seller registration:', error);
+        res.status(500).json({ message: 'Error registering seller', error: error.message });
+    }
+};
+
 exports.login = async (req, res) => {
     try {
         const { identifier, password } = req.body;
@@ -330,73 +398,7 @@ exports.verifyOTP = async (req, res) => {
     }
 };
 
-exports.registerSeller = async (req, res) => {
-    try {
-        const { username, email, phoneNumber, password } = req.body;
-        console.log('Request Body:', req.body);
 
-        // Validasi apakah email atau nomor telepon sudah ada di database
-        const existingUser = await User.findOne({
-            where: {
-                [Op.or]: [
-                    { Email: email },
-                    { phoneNumber: phoneNumber }
-                ]
-            }
-        });
-
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email or Phone Number already exists. Please use a different email or phone number.' });
-        }
-
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Generate OTP using Fazpass
-        const otpResponse = await generateOTPSMS(phoneNumber);
-        const otp = otpResponse.data.otp;
-        const otp_id = otpResponse.data.id;
-        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
-
-        // Buat pengguna baru
-        const newUser = await User.create({
-            Username: username,
-            Email: email,
-            phoneNumber: phoneNumber,
-            PasswordHash: hashedPassword,
-            Role: 'seller',
-            IsVerified: false,
-            otp,
-            otp_id,
-            otpExpiresAt
-        });
-
-        // Simpan OTP di tabel AuditLogs
-        await AuditLog.create({
-            action: 'otp',
-            user_id: newUser.UserID,
-            otp,
-            otp_id,
-            otpExpiresAt
-        });
-
-        // Log audit record for user registration
-        await auditController.logCreateAction(newUser.UserID, email, newUser.secure_id, 'Seller created', otp, otp_id);
-
-        res.status(201).json({ 
-            message: 'Seller registered successfully. Please verify your phone with the OTP sent via WhatsApp.', 
-            user: {
-                ...newUser.toJSON(),
-                profilePictureURL: `http://147.139.246.88:4000/${newUser.profilePicture}`
-            },
-            otp,
-            otp_id
-        });
-    } catch (error) {
-        console.error('Error during seller registration:', error);
-        res.status(500).json({ message: 'Error registering seller', error: error.message });
-    }
-};
 
 exports.resendOTP = async (req, res) => {
     try {
@@ -534,7 +536,9 @@ exports.deleteAccount = async (req, res) => {
         await user.destroy();
 
         // Log the deletion in the audit table
-        await auditController.logDeleteAction(userId, req.user.username, req.user.secure_id);
+        const username = req.user ? req.user.username : 'system';
+        const secure_id = req.user ? req.user.secure_id : 'system';
+        await auditController.logDeleteAction(userId, username, secure_id);
 
         res.status(200).json({ message: 'User account deleted successfully' });
     } catch (error) {

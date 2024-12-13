@@ -4,18 +4,21 @@ const addressController = require('../controllers/addressController');
 const authenticate = require('../middleware/authenticate');
 
 // Get all addresses
-router.get('/', addressController.getAddresses);
+router.get('/', authenticate, addressController.getAddresses);
 
-// Get address by ID
-router.get('/:id', addressController.getAddressById);
+// Search address by addressID or userID
+router.get('/search', authenticate, addressController.searchAddress);
+
+// Get addresses by user token and addressID
+router.get('/user', authenticate, addressController.getAddressesByUser);
 
 // Create a new address
-router.post('/', addressController.addAddress);
+router.post('/', authenticate, addressController.addAddress);
 
 // Update an address
-router.put('/:id', addressController.updateAddress);
+router.put('/:id', authenticate, addressController.updateAddress);
 
 // Delete an address
-router.delete('/:id', addressController.deleteAddress);
+router.delete('/:id', authenticate, addressController.deleteAddress);
 
 module.exports = router;
