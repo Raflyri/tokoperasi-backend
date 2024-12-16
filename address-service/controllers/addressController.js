@@ -56,11 +56,11 @@ exports.getAddressesByUser = async (req, res) => {
 exports.getAddressDetails = async (req, res) => {
     try {
         const userId = req.user.id;
-        const address = await UserAddress.findOne({ where: { UserID: userId } });
-        if (!address) {
-            return res.status(404).json({ message: 'Address not found' });
+        const addresses = await UserAddress.findAll({ where: { UserID: userId } });
+        if (addresses.length === 0) {
+            return res.status(404).json({ message: 'Addresses not found' });
         }
-        res.status(200).json(address);
+        res.status(200).json(addresses);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch address details' });
     }
