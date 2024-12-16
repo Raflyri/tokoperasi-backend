@@ -94,7 +94,7 @@ exports.searchProducts = async (req, res) => {
     const whereClause = {};
 
     if (query) {
-        whereClause.ProductName = { [Op.like]: `%{query}%` };
+        whereClause.ProductName = { [Op.like]: `%${query}%` };
     }
     if (minPrice) {
         whereClause.Price = { ...whereClause.Price, [Op.gte]: minPrice };
@@ -126,6 +126,11 @@ exports.searchProducts = async (req, res) => {
             include: [ProductImage, Category],
             order: orderClause
         });
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: 'Produk tidak ditemukan' });
+        }
+
         const detailedProducts = products.map(product => {
             const productData = product.toJSON();
             productData.images = productData.ProductImages.map(image => ({

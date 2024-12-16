@@ -4,6 +4,7 @@ const cors = require('cors');
 const proxy = require('express-http-proxy');
 const morgan = require('morgan'); // Tambahkan morgan untuk logging
 const axios = require('axios'); // Tambahkan axios untuk melakukan request HTTP
+const apiRoutes = require('./routes/apiRoutes'); // Import apiRoutes
 const app = express();
 
 app.use(morgan('combined')); // Tambahkan middleware logging
@@ -37,6 +38,9 @@ app.use(cors({
 app.get('/api', (req, res) => {
     res.send('CORS bekerja!');
 });
+
+// Use apiRoutes
+app.use('/api', apiRoutes);
 
 // Proxy ke Authentication Service
 app.use('/api-auth', proxy(process.env.AUTH_SERVICE_URL, proxyOptions));

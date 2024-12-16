@@ -32,6 +32,9 @@ router.get('/category/:categoryID', gatewayController.getProductsByCategory);
 // Rute untuk mendapatkan produk berdasarkan seller ID
 router.get('/seller-products/:userID', gatewayController.getProductsBySeller);
 
+// Rute untuk mendapatkan data detail seller dengan produk yang dimiliki seller tersebut
+router.get('/seller-details/:sellerID', gatewayController.getSellerDetailsWithProducts);
+
 // Rute cart yang diarahkan ke cart-service
 router.get('/cart', gatewayController.getCart);
 router.post('/cart', gatewayController.addToCart);

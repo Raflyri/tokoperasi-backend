@@ -251,6 +251,39 @@ exports.getProductsBySeller = async (req, res) => {
     }
 };
 
+// Logika untuk mendapatkan data detail seller dengan produk yang dimiliki seller tersebut
+exports.getSellerDetailsWithProducts = async (req, res) => {
+    try {
+        const sellerID = req.params.sellerID;
+
+        // Fetch seller details
+        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2`, {
+            params: { id: sellerID }
+        });
+        const sellerData = sellerResponse.data;
+
+        if (!sellerData) {
+            return res.status(404).json({ message: 'Seller not found' });
+        }
+
+        // Fetch products by seller ID using search endpoint
+        const productsResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/search`, {
+            params: { sellerID: sellerID }
+        });
+        const productsData = productsResponse.data;
+
+        const combinedData = {
+            seller: sellerData,
+            products: productsData
+        };
+
+        res.status(200).json(combinedData);
+    } catch (error) {
+        console.error('Error fetching seller details or products:', error.message);
+        res.status(500).send('Error fetching seller details or products');
+    }
+};
+
 // Logika untuk mengarahkan request users dengan query parameters ke auth-service
 exports.getUsers = async (req, res) => {
   try {
