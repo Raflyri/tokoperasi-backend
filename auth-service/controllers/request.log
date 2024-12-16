@@ -16,3 +16,9 @@ Request: {"username":"seller_rb44","email":"seller_rb44@example.com","gender":"m
 Time: 2024-11-23T15:18:02.714Z
 Request: {"username":"Test User Lagi","email":"test_user60@example.com","gender":"male","birthdate":"1998-11-18","phoneNumber":"0812345672233","password":"password123"}
 
+Time: 2024-12-16T15:24:31.124Z
+Request: {"username":"Nama Baru Coba"}
+
+Time: 2024-12-16T15:31:12.908Z
+Request: {"username":"Nama Baru Coba 2"}
+

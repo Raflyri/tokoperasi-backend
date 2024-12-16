@@ -78,10 +78,13 @@ router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 
 // Route untuk update user (memerlukan autentikasi)
-router.put('/update/:id', authenticate, upload.single('profilePicture'), resizeImage, userController.updateUser);
+router.put('/update', authenticate, upload.single('profilePicture'), resizeImage, userController.updateUser);
 
 // Route untuk verifikasi user (hanya untuk admin)
 router.put('/verify-user/:userId', authenticate, userController.verifyUser);
+
+//Route untuk mendapatkan detail user berdasarkan token yang login
+router.get('/user-w-token', authenticate, userController.getUserDetails);
 
 // Route untuk mendapatkan detail user beserta sesi loginnya
 router.get('/user-details', authenticate, userController.getUsers);

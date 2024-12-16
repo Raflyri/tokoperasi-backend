@@ -223,7 +223,10 @@ exports.login = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const userId = req.params.id;
+        const token = req.headers.authorization.split(' ')[1]; // Extract token from Authorization header
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Decode the token to get user info
+        const userId = decoded.id; // Get user ID from the decoded token
+
         const user = await User.findByPk(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -289,11 +292,11 @@ exports.updateUser = async (req, res) => {
 
         await auditController.logUpdateAction(
             userId,
-            req.user.username,
-            req.user.secure_id,
+            user.Username,
+            user.secure_id,
             {
-                modified_by: req.user.username,
-                modified_by_id: req.user.secure_id,
+                modified_by: user.Username,
+                modified_by_id: user.secure_id,
                 modified_date: Math.floor(Date.now() / 1000),
                 changes: JSON.stringify(updatedFields)
             }
@@ -398,7 +401,33 @@ exports.verifyOTP = async (req, res) => {
     }
 };
 
+//Detail User berdasarkan token yang login
+exports.getUserDetails = async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1]; // Extract token from Authorization header
+        const decoded = jwt.verify(token, process.env.JWT_SECRET); // Decode the token to get user info
+        const userId = decoded.id; // Get user ID from the decoded token
 
+        const user = await User.findByPk(userId, {
+            include: [{
+                model: Session,
+                attributes: ['Token', 'CreatedAt', 'ExpiresAt']
+            }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({
+            ...user.toJSON(),
+            profilePictureURL: `http://147.139.246.88:4000/${user.profilePicture}`
+        });
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        res.status(500).json({ message: 'Error fetching user details', error: error.message });
+    }
+};
 
 exports.resendOTP = async (req, res) => {
     try {
@@ -559,5 +588,6 @@ module.exports = {
     resendOTP: exports.resendOTP,
     forgotPassword: exports.forgotPassword,
     resetPassword: exports.resetPassword,
-    deleteAccount: exports.deleteAccount
+    deleteAccount: exports.deleteAccount,
+    getUserDetails: exports.getUserDetails
 };
