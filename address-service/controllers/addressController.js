@@ -52,6 +52,20 @@ exports.getAddressesByUser = async (req, res) => {
     }
 };
 
+// Get address details by user token
+exports.getAddressDetails = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const address = await UserAddress.findOne({ where: { UserID: userId } });
+        if (!address) {
+            return res.status(404).json({ message: 'Address not found' });
+        }
+        res.status(200).json(address);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch address details' });
+    }
+};
+
 // Create a new address
 exports.addAddress = async (req, res) => {
     try {

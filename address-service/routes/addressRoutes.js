@@ -12,6 +12,9 @@ router.get('/search', authenticate, addressController.searchAddress);
 // Get addresses by user token and addressID
 router.get('/user', authenticate, addressController.getAddressesByUser);
 
+// Get address details by user token
+router.get('/details-by-id', authenticate, addressController.getAddressDetails);
+
 // Create a new address
 router.post('/', authenticate, addressController.addAddress);
 
