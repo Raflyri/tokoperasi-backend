@@ -76,7 +76,9 @@ app.use('/api-advertisements', proxy(process.env.ADMIN_SERVICE_URL, proxyOptions
 app.get('/api/detail-products/:id', async (req, res) => {
     console.log('Get product by ID request received:', req.params);
     try {
-        const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/${req.params.id}`);
+        const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/search`, {
+            params: { productID: req.params.id }
+        });
         const productData = productResponse.data;
         console.log('Product data:', productData);
 
