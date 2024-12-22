@@ -19,7 +19,7 @@ app.get('/api', (req, res) => {
 });
 
 // Routes
-app.use('/api/cart', cartRoutes);
+app.use('/', cartRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'API Endpoint Cart' });

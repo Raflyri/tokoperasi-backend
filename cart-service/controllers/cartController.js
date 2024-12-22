@@ -55,15 +55,25 @@ exports.addItemToCart = async (req, res) => {
 };
 
 // Get Cart by ID
-exports.getCartById = async (req, res) => {
+exports.getCartWithToken = async (req, res) => {
     try {
-        const UserID = req.params.id;
+        const UserID = req.user.id; // Get UserID from the authenticated user
         const cart = await Cart.findOne({ where: { UserID }, include: [CartItem] });
         if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
         res.json(cart);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching cart', error: error.message });
+    }
+};
+
+// Get All Carts with Items
+exports.getAllCartsWithItems = async (req, res) => {
+    try {
+        const carts = await Cart.findAll({ include: [CartItem] });
+        res.json(carts);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching carts', error: error.message });
     }
 };
 
