@@ -86,17 +86,25 @@ app.get('/api/detail-products/:id', async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        console.log('Product data:', productData);
+        // Check the structure of productData
+        console.log('Product data structure:', JSON.stringify(productData, null, 2));
 
-        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2/${productData.SellerID}`);
+        const sellerID = productData.SellerID || productData.sellerID || productData.sellerId;
+        console.log('Extracted SellerID:', sellerID);
+
+        if (!sellerID) {
+            return res.status(404).json({ message: 'SellerID not found in product data' });
+        }
+
+        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2`, {
+            params: { id: sellerID }
+        });
         const sellerData = sellerResponse.data;
         console.log('Seller data:', sellerData);
 
         if (!sellerData) {
             return res.status(404).json({ message: 'Seller not found' });
         }
-
-        console.log('Seller data:', sellerData);
 
         const combinedData = {
             ...productData,
@@ -112,12 +120,12 @@ app.get('/api/detail-products/:id', async (req, res) => {
     }
 });
 
-// Route untuk search produk dengan detail seller
-app.get('/api/search-products', async (req, res) => {
-    console.log('Get product by query request received:', req.query);
+// Route untuk search produk dengan detail seller menggunakan path variable :id
+app.get('/api/search-products/:id', async (req, res) => {
+    console.log('Get product by ID request received:', req.params);
     try {
         const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/search`, {
-            params: req.query
+            params: { productID: req.params.id }
         });
 
         const productDataArray = productResponse.data;
@@ -132,7 +140,9 @@ app.get('/api/search-products', async (req, res) => {
         const combinedDataArray = await Promise.all(
             productDataArray.map(async (product) => {
                 try {
-                    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2/${product.SellerID}`);
+                    const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2`, {
+                        params: { id: product.SellerID }
+                    });
                     const sellerData = sellerResponse.data;
 
                     console.log(`Seller data for ProductID ${product.ProductID}:`, sellerData);
