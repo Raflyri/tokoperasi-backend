@@ -322,6 +322,11 @@ exports.getUsers = async (req, res) => {
         const { username, id, role, isVerified, isMember } = req.query;
         console.log('Query Params:', req.query);
 
+        if (!username && !id && !role && isVerified === undefined && isMember === undefined) {
+            console.error('Error: Request data is empty or missing');
+            return res.status(400).json({ message: 'Request data is empty or missing' });
+        }
+
         const filterConditions = {};
         if (role) filterConditions.Role = role;
         if (id) filterConditions.UserID = id;

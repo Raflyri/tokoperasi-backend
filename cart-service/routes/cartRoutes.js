@@ -7,6 +7,8 @@ const authenticate = require('../middleware/authenticate');
 router.post('/create', authenticate, cartController.createCart);          
 router.get('/get-cart', authenticate, cartController.getCartWithToken); //Ambil Cart Berdasarkan Token User        
 router.get('/all-cart', authenticate, cartController.getAllCartsWithItems); // Get all carts with items
+router.get('/user', authenticate, cartController.getCartByUser);
+
 
 // Cart Item Routes
 router.post('/add-item', authenticate, cartController.addItemToCart);

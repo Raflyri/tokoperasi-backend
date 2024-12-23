@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authenticate = require('../middleware/authenticate');
 const gatewayController = require('../controllers/gatewayController');  // Import controller
 
 // Rute login yang diarahkan ke auth-service
@@ -25,7 +26,6 @@ router.get('/all-users', gatewayController.getUsers);
 
 // Rute produk yang diarahkan ke product-service
 router.get('/', gatewayController.getProducts);
-router.get('/:id', gatewayController.getProductById);
 router.get('/search', gatewayController.searchProducts);
 router.get('/category/:categoryID', gatewayController.getProductsByCategory);
 
@@ -37,6 +37,7 @@ router.get('/seller-details/:sellerID', gatewayController.getSellerDetailsWithPr
 
 // Rute cart yang diarahkan ke cart-service
 router.get('/cart', gatewayController.getCart);
+router.get('/cart-details', authenticate, gatewayController.getCartWithDetails);
 router.post('/cart', gatewayController.addToCart);
 router.delete('/cart/:id', gatewayController.removeFromCart);
 

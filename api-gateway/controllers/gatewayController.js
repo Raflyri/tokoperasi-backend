@@ -120,52 +120,6 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// Logika untuk mengarahkan request produk by ID ke product-service
-exports.getProductById = async (req, res) => {
-  console.log("Get product by ID request received:", req.params);
-  try {
-    const productResponse = await axios.get(
-      `${process.env.PRODUCT_SERVICE_URL}/products/${req.params.id}`
-    );
-    const productData = productResponse.data;
-
-    if (!productData) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    console.log("Product data:", productData);
-
-    const sellerResponse = await axios.get(
-      `${process.env.AUTH_SERVICE_URL}/api/auth/user-details/${productData.SellerID}`
-    );
-    const sellerData = sellerResponse.data;
-
-    if (!sellerData) {
-      return res.status(404).json({ message: "Seller not found" });
-    }
-
-    console.log("Seller data:", sellerData);
-
-    const combinedData = {
-      ...productData,
-      seller: sellerData,
-    };
-
-    console.log("Get product by ID request successful:", combinedData);
-    res.status(productResponse.status).json(combinedData);
-  } catch (error) {
-    console.error(
-      "Error connecting to services for get product by ID:",
-      error.message
-    );
-    console.error(
-      "Error details:",
-      error.response ? error.response.data : "No response data"
-    );
-    res.status(500).send("Error connecting to services");
-  }
-};
-
 // Logika untuk mengarahkan request search produk ke product-service
 exports.searchProducts = async (req, res) => {
   console.log("Search products request received:", req.query);
@@ -176,10 +130,7 @@ exports.searchProducts = async (req, res) => {
       { params: req.query }
     );
     const productData = productResponse.data;
-    console.log(
-      "Search products response from product-service:",
-      productData
-    );
+    console.log("Search products response from product-service:", productData);
 
     if (!productData) {
       return res.status(404).json({ message: "Product not found" });
@@ -234,54 +185,67 @@ exports.getProductsByCategory = async (req, res) => {
 
 // Logika untuk mengarahkan request produk berdasarkan seller ID ke product-service
 exports.getProductsBySeller = async (req, res) => {
-    console.log('Get products by seller ID request received:', req.params);
-    try {
-        const response = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/seller/${req.params.userID}`);
-        const products = response.data;
+  console.log("Get products by seller ID request received:", req.params);
+  try {
+    const response = await axios.get(
+      `${process.env.PRODUCT_SERVICE_URL}/products/seller/${req.params.userID}`
+    );
+    const products = response.data;
 
-        if (!products || products.length === 0) {
-            return res.status(404).json({ message: 'No products found for this seller' });
-        }
-
-        console.log('Products data:', products);
-        res.status(200).json(products);
-    } catch (error) {
-        console.error('Error connecting to product-service for get products by seller:', error.message);
-        res.status(500).send('Error connecting to product-service');
+    if (!products || products.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No products found for this seller" });
     }
+
+    console.log("Products data:", products);
+    res.status(200).json(products);
+  } catch (error) {
+    console.error(
+      "Error connecting to product-service for get products by seller:",
+      error.message
+    );
+    res.status(500).send("Error connecting to product-service");
+  }
 };
 
 // Logika untuk mendapatkan data detail seller dengan produk yang dimiliki seller tersebut
 exports.getSellerDetailsWithProducts = async (req, res) => {
-    try {
-        const sellerID = req.params.sellerID;
+  try {
+    const sellerID = req.params.sellerID;
 
-        // Fetch seller details
-        const sellerResponse = await axios.get(`${process.env.AUTH_SERVICE_URL}/user-details-v2`, {
-            params: { id: sellerID }
-        });
-        const sellerData = sellerResponse.data;
+    // Fetch seller details
+    const sellerResponse = await axios.get(
+      `${process.env.AUTH_SERVICE_URL}/user-details-v2`,
+      {
+        params: { id: sellerID },
+      }
+    );
+    const sellerData = sellerResponse.data;
 
-        if (!sellerData) {
-            return res.status(404).json({ message: 'Seller not found' });
-        }
-
-        // Fetch products by seller ID using search endpoint
-        const productsResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/search`, {
-            params: { sellerID: sellerID }
-        });
-        const productsData = productsResponse.data;
-
-        const combinedData = {
-            seller: sellerData,
-            products: productsData
-        };
-
-        res.status(200).json(combinedData);
-    } catch (error) {
-        console.error('Error fetching seller details or products:', error.message);
-        res.status(500).send('Error fetching seller details or products');
+    if (!sellerData) {
+      return res.status(404).json({ message: "Seller not found" });
     }
+
+    // Fetch products by seller ID using search endpoint
+    const productsResponse = await axios.get(
+      `${process.env.PRODUCT_SERVICE_URL}/products/search`,
+      {
+        params: { sellerID: sellerID },
+      }
+    );
+    const productsData = productsResponse.data;
+
+    const combinedData = {
+      seller: sellerData,
+      products: productsData,
+    };
+
+    res.status(200).json(combinedData);
+  } catch (error) {
+    console.error("Error fetching seller details or products:", error.message);
+    res.status(500).send("Error fetching seller details or products");
+  }
 };
 
 // Logika untuk mengarahkan request users dengan query parameters ke auth-service
@@ -349,6 +313,80 @@ exports.removeFromCart = async (req, res) => {
     res.status(500).send("Error connecting to cart-service");
   }
 };
+
+exports.getCartWithDetails = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1]; // Extract token from Authorization header
+    const cartResponse = await axios.get(`${process.env.CART_SERVICE_URL}/user`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const cartData = cartResponse.data;
+
+    if (!cartData || !cartData.CartItems || cartData.CartItems.length === 0) {
+      return res.status(404).json({ message: 'Cart is empty' });
+    }
+
+    const detailedCart = await Promise.all(
+      cartData.CartItems.map(async (cartItem) => {
+        try {
+          // Fetch product details
+          const productResponse = await axios.get(
+            `${process.env.PRODUCT_SERVICE_URL}/products/search`,
+            {
+              params: { productID: cartItem.ProductID },
+            }
+          );
+          const productDataArray = productResponse.data;
+
+          if (!Array.isArray(productDataArray) || productDataArray.length === 0) {
+            console.error(`No product data found for ProductID: ${cartItem.ProductID}`);
+            return { ...cartItem, product: null, seller: null };
+          }
+
+          // Process each product to get its seller details
+          const productsWithSeller = await Promise.all(
+            productDataArray.map(async (product) => {
+              const sellerID = product.SellerID;
+              if (!sellerID) {
+                console.error(`SellerID not found for ProductID: ${product.ProductID}`);
+                return { ...product, seller: null };
+              }
+
+              try {
+                const sellerResponse = await axios.get(
+                  `${process.env.AUTH_SERVICE_URL}/user-details-v2`,
+                  {
+                    params: { id: sellerID },
+                  }
+                );
+                const sellerData = sellerResponse.data;
+                return { ...product, seller: sellerData };
+              } catch (sellerError) {
+                console.error(
+                  `Error fetching seller data for SellerID: ${sellerID}`,
+                  sellerError.message
+                );
+                return { ...product, seller: null };
+              }
+            })
+          );
+
+          return { ...cartItem, product: productsWithSeller };
+        } catch (productError) {
+          console.error(`Error fetching product data for CartItemID: ${cartItem.CartItemID}`, productError.message);
+          return { ...cartItem, product: null, seller: null };
+        }
+      })
+    );
+
+    res.status(200).json(detailedCart);
+  } catch (error) {
+    console.error('Error fetching cart details:', error.message);
+    res.status(500).send('Error fetching cart details');
+  }
+};
+
+
 
 // Logika untuk mengarahkan request orders ke order-service
 exports.getOrders = async (req, res) => {
@@ -599,47 +637,68 @@ exports.getAddressById = async (req, res) => {
 // Logika untuk mengarahkan request advertisements ke advertisement-service
 exports.getAdvertisements = async (req, res) => {
   try {
-    const response = await axios.get(`${process.env.ADMIN_SERVICE_URL}/advertisements`);
+    const response = await axios.get(
+      `${process.env.ADMIN_SERVICE_URL}/advertisements`
+    );
     console.log("Get advertisements request successful:", response.data);
     res.status(response.status).send(response.data);
   } catch (error) {
-    console.error("Error connecting to advertisement-service for get advertisements:", error.message);
+    console.error(
+      "Error connecting to advertisement-service for get advertisements:",
+      error.message
+    );
     res.status(500).send("Error connecting to advertisement-service");
   }
 };
 
 exports.getAdvertisementById = async (req, res) => {
   try {
-    const response = await axios.get(`${process.env.ADMIN_SERVICE_URL}/advertisements/${req.params.id}`);
+    const response = await axios.get(
+      `${process.env.ADMIN_SERVICE_URL}/advertisements/${req.params.id}`
+    );
     console.log("Get advertisement by ID request successful:", response.data);
     res.status(response.status).send(response.data);
   } catch (error) {
-    console.error("Error connecting to advertisement-service for get advertisement by ID:", error.message);
+    console.error(
+      "Error connecting to advertisement-service for get advertisement by ID:",
+      error.message
+    );
     res.status(500).send("Error connecting to advertisement-service");
   }
 };
 
 // Logika untuk mengarahkan request delete akun ke auth-service dan menghapus data terkait
 exports.deleteAccount = async (req, res) => {
-    try {
-        const userId = req.params.id;
-        // Hapus akun dari auth-service
-        await axios.delete(`${process.env.AUTH_SERVICE_URL}/api/auth/delete/${userId}`);
-        console.log(`User account ${userId} deleted from auth-service`);
+  try {
+    const userId = req.params.id;
+    // Hapus akun dari auth-service
+    await axios.delete(
+      `${process.env.AUTH_SERVICE_URL}/api/auth/delete/${userId}`
+    );
+    console.log(`User account ${userId} deleted from auth-service`);
 
-        // Hapus data terkait dari service lain
-        await axios.delete(`${process.env.CART_SERVICE_URL}/cart/user/${userId}`);
-        console.log(`Cart data for user ${userId} deleted from cart-service`);
+    // Hapus data terkait dari service lain
+    await axios.delete(`${process.env.CART_SERVICE_URL}/cart/user/${userId}`);
+    console.log(`Cart data for user ${userId} deleted from cart-service`);
 
-        await axios.delete(`${process.env.ORDER_SERVICE_URL}/orders/user/${userId}`);
-        console.log(`Order data for user ${userId} deleted from order-service`);
+    await axios.delete(
+      `${process.env.ORDER_SERVICE_URL}/orders/user/${userId}`
+    );
+    console.log(`Order data for user ${userId} deleted from order-service`);
 
-        await axios.delete(`${process.env.ADDRESS_SERVICE_URL}/addresses/user/${userId}`);
-        console.log(`Address data for user ${userId} deleted from address-service`);
+    await axios.delete(
+      `${process.env.ADDRESS_SERVICE_URL}/addresses/user/${userId}`
+    );
+    console.log(`Address data for user ${userId} deleted from address-service`);
 
-        res.status(200).json({ message: 'User account and related data deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting user account or related data:', error.message);
-        res.status(500).send('Error deleting user account or related data');
-    }
+    res
+      .status(200)
+      .json({ message: "User account and related data deleted successfully" });
+  } catch (error) {
+    console.error(
+      "Error deleting user account or related data:",
+      error.message
+    );
+    res.status(500).send("Error deleting user account or related data");
+  }
 };
