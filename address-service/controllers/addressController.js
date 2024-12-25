@@ -14,10 +14,11 @@ exports.getAddresses = async (req, res) => {
 // Search address by various fields
 exports.searchAddress = async (req, res) => {
     try {
-        const { addressID, userID, AddressLine, City, Province, PostalCode, LabelAddress, RecipientName, RecipientPhone } = req.query;
+        const { addressID, userID, IsDefault, AddressLine, City, Province, PostalCode, LabelAddress, RecipientName, RecipientPhone } = req.query;
         const whereClause = {};
         if (addressID) whereClause.AddressID = addressID;
         if (userID) whereClause.UserID = userID;
+        if (IsDefault) whereClause.IsDefault = IsDefault;
         if (AddressLine) whereClause.AddressLine1 = { [Op.like]: `%${AddressLine}%` };
         if (City) whereClause.City = { [Op.like]: `%${City}%` };
         if (Province) whereClause.Province = { [Op.like]: `%${Province}%` };
@@ -69,8 +70,40 @@ exports.getAddressDetails = async (req, res) => {
 // Create a new address
 exports.addAddress = async (req, res) => {
     try {
-        const { AddressLine1, AddressLine2, City, Province, PostalCode, IsDefault, LabelAddress, RecipientName, RecipientPhone, Latitude, Longitude } = req.body;
+        const { 
+            AddressLine1, 
+            AddressLine2, 
+            City, 
+            Province, 
+            PostalCode, 
+            IsDefault, 
+            LabelAddress, 
+            RecipientName, 
+            RecipientPhone, 
+            Latitude, 
+            Longitude 
+        } = req.body;
         const userId = req.user.id;
+
+        let statusCode = 200; // Default status code
+        let responseMessage = 'Address added successfully'; // Default message
+
+        // Check if IsDefault is set to true (1)
+        if (IsDefault) {
+            // Find any existing default address for the user
+            const existingDefaultAddress = await UserAddress.findOne({
+                where: { UserID: userId, IsDefault: true }
+            });
+
+            // If an existing default address is found, update it to IsDefault = false
+            if (existingDefaultAddress) {
+                await existingDefaultAddress.update({ IsDefault: false });
+                statusCode = 201; // Change status code to 201 for IsDefault change
+                responseMessage = 'Address added, previous default address updated'; // Custom message
+            }
+        }
+
+        // Create the new address
         const newAddress = await UserAddress.create({ 
             UserID: userId, 
             AddressLine1, 
@@ -78,19 +111,22 @@ exports.addAddress = async (req, res) => {
             City, 
             Province, 
             PostalCode, 
-            IsDefault,
+            IsDefault: IsDefault || false, // Ensure IsDefault defaults to false
             LabelAddress,
             RecipientName,
             RecipientPhone,
             Latitude,
             Longitude
         });
-        res.status(201).json({ message: 'Address created successfully', newAddress });
+
+        res.status(statusCode).json({ message: responseMessage, newAddress });
     } catch (error) {
         console.error('Error creating address:', error);
         res.status(500).json({ message: 'Error creating address', error: error.message });
     }
 };
+
+
 
 // Update an address
 exports.updateAddress = async (req, res) => {
