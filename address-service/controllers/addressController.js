@@ -126,8 +126,6 @@ exports.addAddress = async (req, res) => {
     }
 };
 
-
-
 // Update an address
 exports.updateAddress = async (req, res) => {
     try {
@@ -138,17 +136,20 @@ exports.updateAddress = async (req, res) => {
         if (!address) {
             return res.status(404).json({ message: 'Address not found' });
         }
-        address.AddressLine1 = AddressLine1;
-        address.AddressLine2 = AddressLine2;
-        address.City = City;
-        address.Province = Province;
-        address.PostalCode = PostalCode;
-        address.IsDefault = IsDefault;
-        address.LabelAddress = LabelAddress;
-        address.RecipientName = RecipientName;
-        address.RecipientPhone = RecipientPhone;
-        address.Latitude = Latitude;
-        address.Longitude = Longitude;
+
+        // Update only the fields that are provided in the request body
+        if (AddressLine1 !== undefined) address.AddressLine1 = AddressLine1;
+        if (AddressLine2 !== undefined) address.AddressLine2 = AddressLine2;
+        if (City !== undefined) address.City = City;
+        if (Province !== undefined) address.Province = Province;
+        if (PostalCode !== undefined) address.PostalCode = PostalCode;
+        if (IsDefault !== undefined) address.IsDefault = IsDefault;
+        if (LabelAddress !== undefined) address.LabelAddress = LabelAddress;
+        if (RecipientName !== undefined) address.RecipientName = RecipientName;
+        if (RecipientPhone !== undefined) address.RecipientPhone = RecipientPhone;
+        if (Latitude !== undefined) address.Latitude = Latitude;
+        if (Longitude !== undefined) address.Longitude = Longitude;
+
         await address.save();
         res.status(200).json({ message: 'Address updated successfully', address });
     } catch (error) {
