@@ -5,6 +5,7 @@ const proxy = require('express-http-proxy');
 const morgan = require('morgan'); // Tambahkan morgan untuk logging
 const axios = require('axios'); // Tambahkan axios untuk melakukan request HTTP
 const apiRoutes = require('./routes/apiRoutes'); // Import apiRoutes
+const { createProxyMiddleware } = require('http-proxy-middleware'); // Import createProxyMiddleware
 const app = express();
 
 app.use(morgan('combined')); // Tambahkan middleware logging
@@ -71,6 +72,12 @@ app.use('/api-cart', proxy(process.env.CART_SERVICE_URL, proxyOptions));
 
 // Proxy ke Advertisement Service
 app.use('/api-advertisements', proxy(process.env.ADMIN_SERVICE_URL, proxyOptions));
+
+// Proxy ke Email Service
+app.use('/email', createProxyMiddleware({
+    target: process.env.EMAIL_SERVICE_URL,
+    changeOrigin: true
+}));
 
 // Route untuk mendapatkan produk dan detail seller
 app.get('/api/detail-products/:id', async (req, res) => {

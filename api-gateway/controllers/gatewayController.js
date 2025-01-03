@@ -23,6 +23,17 @@ exports.register = async (req, res) => {
       req.body
     );
     console.log("Register request successful:", response.data);
+
+    // Send confirmation email
+    try {
+      const emailResponse = await axios.post(`${process.env.EMAIL_SERVICE_URL}/email/send-registration-success`, {
+        to: req.body.email
+      });
+      console.log(`Email sent successfully to ${req.body.email}:`, emailResponse.data);
+    } catch (emailError) {
+      console.error(`Failed to send email to ${req.body.email}:`, emailError.message);
+    }
+
     res.status(response.status).send(response.data);
   } catch (error) {
     console.error(
@@ -379,7 +390,22 @@ exports.getCartWithDetails = async (req, res) => {
       })
     );
 
-    res.status(200).json(detailedCart);
+    // Group detailedCart by SellerID
+    const groupedCart = detailedCart.reduce((acc, item) => {
+      const sellerID = item.product[0]?.SellerID;
+      if (!sellerID) return acc;
+
+      if (!acc[sellerID]) {
+        acc[sellerID] = {
+          seller: item.product[0].seller,
+          items: []
+        };
+      }
+      acc[sellerID].items.push(item);
+      return acc;
+    }, {});
+
+    res.status(200).json(groupedCart);
   } catch (error) {
     console.error('Error fetching cart details:', error.message);
     res.status(500).send('Error fetching cart details');

@@ -63,6 +63,14 @@ exports.register = async (req, res) => {
         // Log audit record for user registration
         await auditController.logCreateAction(newUser.UserID, email, newUser.secure_id, 'User created');
 
+        // Send registration success email via Email-Service
+        try {
+            await axios.post('http://email-service:3200/email/send-registration-success', { to: email });
+            console.log(`Registration success email sent to ${email}`);
+        } catch (emailError) {
+            console.error(`Failed to send registration success email to ${email}: ${emailError.message}`);
+        }
+
         res.status(201).json({ 
             message: 'User registered successfully.', 
             user: {
@@ -188,6 +196,14 @@ exports.login = async (req, res) => {
             'Token:', token, 
             'ExpUntill:', expiresAt
         );
+
+        // Send login success email via Email-Service
+        try {
+            await axios.post('http://email-service:3200/email/send-login-success', { to: user.Email });
+            console.log(`Login success email sent to ${user.Email}`);
+        } catch (emailError) {
+            console.error(`Failed to send login success email to ${user.Email}: ${emailError.message}`);
+        }
 
         // Panggil API endpoint untuk membuat keranjang
         try {
@@ -367,6 +383,14 @@ exports.logout = async (req, res) => {
         // Log the logout action in the audit table
         await auditController.logDeleteAction(session.UserID, req.user.username, req.user.secure_id);
 
+        // Send logout success email via Email-Service
+        try {
+            await axios.post('http://email-service:3200/email/send-logout-success', { to: req.user.email });
+            console.log(`Logout success email sent to ${req.user.email}`);
+        } catch (emailError) {
+            console.error(`Failed to send logout success email to ${req.user.email}: ${emailError.message}`);
+        }
+
         res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error during logout', error: error.message });
@@ -519,8 +543,13 @@ exports.forgotPassword = async (req, res) => {
         const resetToken = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '1h' });
         const resetURL = `http://147.139.246.88:4000/reset-password?token=${resetToken}`;
 
-        // Send reset URL to user's email (implementation depends on your email service)
-        // await sendEmail(user.Email, 'Password Reset', `Click the link to reset your password: ${resetURL}`);
+        // Send reset URL to user's email via Email-Service
+        try {
+            await axios.post('http://email-service:3200/email/send-reset-password', { to: user.Email, resetLink: resetURL });
+            console.log(`Password reset email sent to ${user.Email}`);
+        } catch (emailError) {
+            console.error(`Failed to send password reset email to ${user.Email}: ${emailError.message}`);
+        }
 
         res.status(200).json({ message: 'Password reset link sent successfully', resetURL });
     } catch (error) {
@@ -545,6 +574,14 @@ exports.resetPassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.PasswordHash = hashedPassword;
         await user.save();
+
+        // Send password reset confirmation email via Email-Service
+        try {
+            await axios.post('http://email-service:3200/email/send-reset-password-confirmation', { to: user.Email });
+            console.log(`Password reset confirmation email sent to ${user.Email}`);
+        } catch (emailError) {
+            console.error(`Failed to send password reset confirmation email to ${user.Email}: ${emailError.message}`);
+        }
 
         res.status(200).json({ message: 'Password reset successfully' });
     } catch (error) {
@@ -573,6 +610,14 @@ exports.deleteAccount = async (req, res) => {
         const username = req.user ? req.user.username : 'system';
         const secure_id = req.user ? req.user.secure_id : 'system';
         await auditController.logDeleteAction(userId, username, secure_id);
+
+        // Send account deletion email via Email-Service
+        try {
+            await axios.post('http://email-service:3200/email/send-account-deletion', { to: user.Email });
+            console.log(`Account deletion email sent to ${user.Email}`);
+        } catch (emailError) {
+            console.error(`Failed to send account deletion email to ${user.Email}: ${emailError.message}`);
+        }
 
         res.status(200).json({ message: 'User account deleted successfully' });
     } catch (error) {

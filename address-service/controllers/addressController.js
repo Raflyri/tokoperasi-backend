@@ -137,6 +137,11 @@ exports.updateAddress = async (req, res) => {
             return res.status(404).json({ message: 'Address not found' });
         }
 
+        // If IsDefault is being set to true, update other addresses to IsDefault = false
+        if (IsDefault === true) {
+            await UserAddress.update({ IsDefault: false }, { where: { UserID: userId, IsDefault: true } });
+        }
+
         // Update only the fields that are provided in the request body
         if (AddressLine1 !== undefined) address.AddressLine1 = AddressLine1;
         if (AddressLine2 !== undefined) address.AddressLine2 = AddressLine2;
@@ -166,7 +171,7 @@ exports.deleteAddress = async (req, res) => {
         if (!address) {
             return res.status(404).json({ message: 'Address not found' });
         }
-        await address.destroy();
+        await address.destroy(); // This line ensures the address is deleted from the database
         res.status(200).json({ message: 'Address deleted successfully' });
     } catch (error) {
         console.error('Error deleting address:', error);

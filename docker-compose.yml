@@ -121,6 +121,19 @@ services:
       - db
     restart: always
 
+  email-service:
+    image: email-service
+    build:
+      context: ./email-service
+      dockerfile: Dockerfile
+    ports:
+      - "3200:3200"
+    volumes:
+      - ./email-service:/usr/src/app
+    networks:
+      - tokoperasi-network
+    restart: always
+
   api-gateway:
     image: api-gateway
     build:
@@ -151,6 +164,7 @@ services:
       - SHIPPING_SERVICE_URL=http://shipping-service:11000
       - ADMIN_SERVICE_URL=http://admin-service:8000
       - ADDRESS_SERVICE_URL=http://address-service:7000
+      - EMAIL_SERVICE_URL=http://email-service:3200
 
   db:
     image: mysql:5.7

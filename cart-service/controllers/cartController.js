@@ -48,19 +48,32 @@ exports.addItemToCart = async (req, res) => {
       cart = await Cart.create({ UserID });
     }
 
-    const newCartItem = await CartItem.create({
-      CartID: cart.CartID,
-      ProductID,
-      Quantity,
-      Note,
+    let cartItem = await CartItem.findOne({
+      where: { CartID: cart.CartID, ProductID }
     });
 
-    res
-      .status(201)
-      .json({
+    if (cartItem) {
+      // Update existing item
+      cartItem.Quantity = Quantity;
+      cartItem.Note = Note;
+      await cartItem.save();
+      res.status(200).json({
+        message: "Item updated in cart successfully",
+        cartItem
+      });
+    } else {
+      // Add new item
+      const newCartItem = await CartItem.create({
+        CartID: cart.CartID,
+        ProductID,
+        Quantity,
+        Note,
+      });
+      res.status(201).json({
         message: "Item added to cart successfully",
         cartItem: newCartItem,
       });
+    }
   } catch (error) {
     console.error("Error adding item to cart:", error.message);
     res
