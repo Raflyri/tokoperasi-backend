@@ -74,7 +74,10 @@ router.post('/resend-otp', userController.resendOTP);
 // Route untuk forgot password
 router.post('/forgot-password', userController.forgotPassword);
 
-// Route for reset password
+// Route untuk memverifikasi token reset password
+router.get('/verify-reset-token', userController.verifyResetToken);
+
+// Route untuk mengubah password
 router.post('/reset-password', userController.resetPassword);
 
 // Route untuk update user (memerlukan autentikasi)

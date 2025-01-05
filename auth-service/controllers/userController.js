@@ -536,12 +536,13 @@ exports.forgotPassword = async (req, res) => {
         });
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Data tidak ditemukan' });
         }
 
         // Generate a password reset token
         const resetToken = jwt.sign({ id: user.UserID, email: user.Email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        const resetURL = `http://147.139.246.88:4000/reset-password?token=${resetToken}`;
+        //const resetURL = `https://apis.tokoperasi.co.id/api-auth/reset-password?token=${resetToken}`;
+        const resetURL = `https://apis.tokoperasi.co.id/api-auth/verify-reset-token?token=${resetToken}`;
 
         // Send reset URL to user's email via Email-Service
         try {
@@ -558,9 +559,31 @@ exports.forgotPassword = async (req, res) => {
     }
 };
 
+// Endpoint GET untuk memverifikasi token dan mengarahkan pengguna ke halaman reset password
+exports.verifyResetToken = async (req, res) => {
+    try {
+        const { token } = req.query; // Ambil token dari query parameter
+
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findByPk(decoded.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Jika token valid, arahkan pengguna ke halaman reset password
+        res.status(200).json({ message: 'Token valid. Redirect to reset password page.' });
+    } catch (error) {
+        console.error('Error verifying reset token:', error);
+        res.status(500).json({ message: 'Invalid or expired token', error: error.message });
+    }
+};
+
+// Endpoint POST untuk mengubah password setelah pengguna memasukkan password baru
 exports.resetPassword = async (req, res) => {
     try {
-        const { token, newPassword } = req.body;
+        const { token, newPassword } = req.body; // Ambil token dan password baru dari body
 
         // Verify the token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -639,5 +662,6 @@ module.exports = {
     forgotPassword: exports.forgotPassword,
     resetPassword: exports.resetPassword,
     deleteAccount: exports.deleteAccount,
-    getUserDetails: exports.getUserDetails
+    getUserDetails: exports.getUserDetails,
+    verifyResetToken: exports.verifyResetToken
 };
