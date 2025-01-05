@@ -569,14 +569,14 @@ exports.verifyResetToken = async (req, res) => {
         const user = await User.findByPk(decoded.id);
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.redirect('https://sbox-web.tokoperasi.co.id/#/resetPasswordexpired');
         }
 
         // Jika token valid, arahkan pengguna ke halaman reset password
-        res.status(200).json({ message: 'Token valid. Redirect to reset password page.' });
+        res.redirect(`https://sbox-web.tokoperasi.co.id/#/updatePassword?token=${token}`);
     } catch (error) {
         console.error('Error verifying reset token:', error);
-        res.status(500).json({ message: 'Invalid or expired token', error: error.message });
+        res.redirect('https://sbox-web.tokoperasi.co.id/#/resetPasswordexpired');
     }
 };
 
