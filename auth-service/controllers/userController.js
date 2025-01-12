@@ -335,13 +335,11 @@ exports.updateUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
     try {
-        const { username, id, role, isVerified, isMember } = req.query;
+        const {
+            username, id, role, isVerified, isMember, email, phoneNumber, storeName,
+            gender, birthdate, referalNum, koperasiName, memberNum, keyword
+        } = req.query;
         console.log('Query Params:', req.query);
-
-        if (!username && !id && !role && isVerified === undefined && isMember === undefined) {
-            console.error('Error: Request data is empty or missing');
-            return res.status(400).json({ message: 'Request data is empty or missing' });
-        }
 
         const filterConditions = {};
         if (role) filterConditions.Role = role;
@@ -349,6 +347,27 @@ exports.getUsers = async (req, res) => {
         if (username) filterConditions.Username = { [Op.like]: `%${username}%` };
         if (isVerified !== undefined) filterConditions.IsVerified = isVerified === 'true';
         if (isMember !== undefined) filterConditions.IsMember = isMember === 'true';
+        if (email) filterConditions.Email = { [Op.like]: `%${email}%` };
+        if (phoneNumber) filterConditions.phoneNumber = { [Op.like]: `%${phoneNumber}%` };
+        if (storeName) filterConditions.storeName = { [Op.like]: `%${storeName}%` };
+        if (gender) filterConditions.Gender = gender;
+        if (birthdate) filterConditions.Birthdate = birthdate;
+        if (referalNum) filterConditions.ReferalNum = { [Op.like]: `%${referalNum}%` };
+        if (koperasiName) filterConditions.KoperasiName = { [Op.like]: `%${koperasiName}%` };
+        if (memberNum) filterConditions.MemberNum = { [Op.like]: `%${memberNum}%` };
+
+        // Pencarian berdasarkan keyword
+        if (keyword) {
+            filterConditions[Op.or] = [
+                { Username: { [Op.like]: `%${keyword}%` } },
+                { Email: { [Op.like]: `%${keyword}%` } },
+                { phoneNumber: { [Op.like]: `%${keyword}%` } },
+                { storeName: { [Op.like]: `%${keyword}%` } },
+                { ReferalNum: { [Op.like]: `%${keyword}%` } },
+                { KoperasiName: { [Op.like]: `%${keyword}%` } },
+                { MemberNum: { [Op.like]: `%${keyword}%` } }
+            ];
+        }
 
         const users = await User.findAll({
             where: filterConditions,
